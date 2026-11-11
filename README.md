@@ -66,9 +66,12 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 * It does **not** collect or send any data. The only internet access is opening Scarlet's Mod List in your browser when you click that button.
 * Deleted files always go to the **Recycle Bin**.
 * For duplicates, ModSweep never lets you delete every file of a group.
-* Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scan linked below.
+* Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scan of the Windows ZIP (v1.0.0): **0 of 53 security vendors flagged it.** [See the full report](https://www.virustotal.com/gui/file/ecb1ffcc2fa6626b2bea114336ad7166f55671f8bb11470a29d7226ab44f36f3)
+VirusTotal scans of version 1.0.0, no security vendor flagged either file:
+
+* Windows ZIP: **0 of 53** ([full report](https://www.virustotal.com/gui/file/ecb1ffcc2fa6626b2bea114336ad7166f55671f8bb11470a29d7226ab44f36f3))
+* Mac and Linux ZIP: **0 of 63** ([full report](https://www.virustotal.com/gui/file/775764be7727e2ccc53507173eeb739ef089ab9c91d0cac161acafb0fc05dcd3))
 
 
 ## FAQ
