@@ -97,5 +97,3 @@ Use at your own risk. It is always a good idea to back up your Mods folder befor
 
 License: MIT
 
-
-*Suggested tags:* the sims 4, tool, utility, mods folder, cleaner, duplicates, organizer, cc
