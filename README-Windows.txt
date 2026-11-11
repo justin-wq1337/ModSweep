@@ -1,7 +1,7 @@
 ﻿=====================================================================
   ModSweep for The Sims 4
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Version 1.0.1, created by Justinimini
+  Version 1.1.0, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -59,7 +59,10 @@ HOW TO USE
 **********
 
   1. Folder: ModSweep finds your Sims 4 Mods folder automatically.
+     If you have two Sims 4 folders (e.g. "Die Sims 4" and
+     "The Sims 4"), it picks the one that really has mods.
      With "Browse ..." you can choose any other folder.
+     ModSweep remembers the folder you used last.
 
   2. Search: Choose what you want to find. The red text below
      explains the selected search type.
@@ -101,12 +104,29 @@ MORE BUTTONS
       This often fixes problems after mod updates.
       Sims 4 must be closed.
 
+  Backup Mods folder
+      Packs the selected folder with all subfolders into a ZIP file
+      with date and time in its name. You choose where to save it,
+      best on another drive or in a cloud folder. To restore, extract
+      the ZIP and put the Mods folder back.
+      Tip: make a backup before you clean up.
+
 
 LANGUAGES
 *********
 
 Choose your language in the list at the top right:
 English, Deutsch, Español, Français, Polski, Português (Brasil).
+ModSweep remembers your choice.
+
+
+LIGHT AND DARK MODE
+*******************
+
+At the bottom right you can choose the look:
+  * Theme: System  follows your Windows setting (default)
+  * Theme: Light
+  * Theme: Dark
 ModSweep remembers your choice.
 
 
@@ -213,7 +233,10 @@ SO BENUTZT DU MODSWEEP
 **********************
 
   1. Ordner: ModSweep findet deinen Sims 4 Mods-Ordner automatisch.
+     Hast du zwei Sims-4-Ordner (z. B. "Die Sims 4" und
+     "The Sims 4"), nimmt es den, in dem wirklich Mods liegen.
      Mit "Durchsuchen ..." kannst du einen anderen Ordner wählen.
+     ModSweep merkt sich den zuletzt benutzten Ordner.
 
   2. Suchart: Wähle aus, was du finden willst. Der rote Text
      darunter erklärt die gewählte Suchart.
@@ -258,12 +281,30 @@ WEITERE KNÖPFE
       oft bei Fehlern nach Mod-Updates. Sims 4 muss dafür
       geschlossen sein.
 
+  Mods-Ordner sichern
+      Packt den gewählten Ordner mit allen Unterordnern in eine
+      ZIP-Datei mit Datum und Uhrzeit im Namen. Du wählst, wo sie
+      gespeichert wird, am besten auf einem anderen Laufwerk oder in
+      einem Cloud-Ordner. Zum Wiederherstellen die ZIP entpacken und
+      den Mods-Ordner zurücklegen.
+      Tipp: Mach vor dem Aufräumen eine Sicherung.
+
 
 SPRACHEN
 ********
 
 Die Sprache wählst du oben rechts in der Liste:
 English, Deutsch, Español, Français, Polski, Português (Brasil).
+ModSweep merkt sich deine Auswahl.
+
+
+HELLER UND DUNKLER MODUS
+************************
+
+Unten rechts wählst du das Aussehen:
+  * Design: System  folgt deiner Windows-Einstellung (Standard)
+  * Design: Hell
+  * Design: Dunkel
 ModSweep merkt sich deine Auswahl.
 
 

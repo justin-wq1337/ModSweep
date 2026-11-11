@@ -29,9 +29,14 @@ Everything you delete goes to the **Recycle Bin** (Trash on Mac and Linux), so n
 * **Clear Sims cache:** deletes localthumbcache.package and the cache folders
 * **Check update status online:** opens Scarlet's Mod List (you choose the SFW or SFW + NSFW edition)
 * **Save list (Excel):** export any result list as a table
+* **Backup Mods folder:** packs your Mods folder into a ZIP file wherever you want, so you can restore it any time
 * **Show in Explorer**, sorting by name, folder, size or date
 
 **6 languages:** English, German, Spanish, French, Polish and Portuguese (Brazil)
+
+**Light and dark mode:** follows your system setting, or choose light or dark yourself
+
+**Remembers your folder:** ModSweep remembers the folder you used last. On the first start it picks the Sims 4 folder that really has mods (e.g. "Die Sims 4" instead of an empty "The Sims 4").
 
 
 ## Download
@@ -70,7 +75,7 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 * For duplicates and versions, ModSweep never lets you delete every file of a group.
 * Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scans of version 1.0.1: *(coming soon)*
+VirusTotal scans of version 1.1.0: *(coming soon)*
 
 
 ## FAQ
@@ -83,6 +88,14 @@ No. There is no common database for Sims 4 mod versions. The "Check update statu
 
 **Does it work on Mac and Linux?**
 Yes, with the Mac and Linux edition. The Mac and Linux edition is new, so please report any problems in the Issues tab.
+
+
+## What's new in 1.1.0
+
+* New: Backup Mods folder button, saves your whole Mods folder as a ZIP file wherever you want
+* New: light and dark mode, or follow the system setting (default)
+* New: ModSweep remembers the folder you used last
+* New: on the first start ModSweep picks the Sims 4 folder that really has mods, if you have more than one (e.g. "Die Sims 4" and "The Sims 4")
 
 
 ## What's new in 1.0.1

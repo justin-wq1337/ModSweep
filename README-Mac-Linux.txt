@@ -1,7 +1,7 @@
 =====================================================================
   ModSweep for The Sims 4 (Mac and Linux edition)
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Version 1.0.1, created by Justinimini
+  Version 1.1.0, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -106,8 +106,11 @@ WHERE IS MY MODS FOLDER?
   HOW TO USE (Mac and Linux)
 =====================================================================
 
-  1. Folder: ModSweep finds your Mods folder automatically. With
-     "Browse ..." you can choose any other folder.
+  1. Folder: ModSweep finds your Mods folder automatically. If you
+     have two Sims 4 folders (e.g. "Die Sims 4" and "The Sims 4"),
+     it picks the one that really has mods. With "Browse ..." you
+     can choose any other folder. ModSweep remembers the folder you
+     used last.
   2. Search: choose what you want to find. The red text below
      explains the selected search type.
   3. Click "Search".
@@ -135,10 +138,20 @@ MORE BUTTONS
   Clear Sims cache
       Moves localthumbcache.package and the cache folders to the
       Trash. Sims 4 must be closed.
+  Backup Mods folder
+      Packs the selected folder with all subfolders into a ZIP file
+      with date and time in its name. You choose where to save it.
+      To restore, extract the ZIP and put the Mods folder back.
+      Tip: make a backup before you clean up.
 
 LANGUAGES
   English, Deutsch, Español, Français, Polski, Português (Brasil).
   Choose at the top right. ModSweep remembers your choice.
+
+LIGHT AND DARK MODE
+  At the bottom right: Theme: System (follows macOS or your Linux
+  desktop, default), Theme: Light or Theme: Dark.
+  ModSweep remembers your choice.
 
 GOOD TO KNOW
   * Close Sims 4 before deleting or moving files.
@@ -256,8 +269,11 @@ WO IST MEIN MODS-ORDNER?
   SO BENUTZT DU MODSWEEP (Mac und Linux)
 =====================================================================
 
-  1. Ordner: ModSweep findet deinen Mods-Ordner automatisch. Mit
+  1. Ordner: ModSweep findet deinen Mods-Ordner automatisch. Hast
+     du zwei Sims-4-Ordner (z. B. "Die Sims 4" und "The Sims 4"),
+     nimmt es den, in dem wirklich Mods liegen. Mit
      "Durchsuchen ..." kannst du einen anderen Ordner wählen.
+     ModSweep merkt sich den zuletzt benutzten Ordner.
   2. Suchart: Wähle aus, was du finden willst. Der rote Text darunter
      erklärt die gewählte Suchart.
   3. Klick auf "Suchen".
@@ -287,10 +303,21 @@ WEITERE KNÖPFE
   Sims-Cache leeren
       Legt localthumbcache.package und die Cache-Ordner in den
       Papierkorb. Sims 4 muss dafür geschlossen sein.
+  Mods-Ordner sichern
+      Packt den gewählten Ordner mit allen Unterordnern in eine
+      ZIP-Datei mit Datum und Uhrzeit im Namen. Du wählst, wo sie
+      gespeichert wird. Zum Wiederherstellen die ZIP entpacken und
+      den Mods-Ordner zurücklegen.
+      Tipp: Mach vor dem Aufräumen eine Sicherung.
 
 SPRACHEN
   English, Deutsch, Español, Français, Polski, Português (Brasil).
   Oben rechts auswählen. ModSweep merkt sich deine Auswahl.
+
+HELLER UND DUNKLER MODUS
+  Unten rechts: Design: System (folgt macOS bzw. deinem
+  Linux-Desktop, Standard), Design: Hell oder Design: Dunkel.
+  ModSweep merkt sich deine Auswahl.
 
 GUT ZU WISSEN
   * Schließe Sims 4, bevor du Dateien löschst oder verschiebst.

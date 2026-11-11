@@ -20,9 +20,10 @@ import sys
 import threading
 import urllib.parse
 import webbrowser
+import zipfile
 
 IS_MAC = sys.platform == 'darwin'
-APP_VERSION = '1.0.1'
+APP_VERSION = '1.1.0'
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 LANG_CODES = ['en', 'de', 'es', 'fr', 'pl', 'pt']
@@ -144,7 +145,18 @@ LANG = json.loads(r'''{
   "updNsfw": "Mod List: SFW + NSFW (adult content, 18+)",
   "trashing": "Working ...",
   "notModsFolder": "This search needs your Mods folder (or a folder inside it). The selected folder is not inside a folder named \"Mods\".",
-  "skippedNotEmpty": " {0} folders were skipped because they are not empty (anymore)."
+  "skippedNotEmpty": " {0} folders were skipped because they are not empty (anymore).",
+  "themeSystem": "Theme: System",
+  "themeLight": "Theme: Light",
+  "themeDark": "Theme: Dark",
+  "btnBackup": "Backup Mods folder",
+  "backupInside": "Please save the backup outside the folder you want to back up.",
+  "backingUp": "Creating backup: {0} of {1} files ...",
+  "backupDone": "Backup saved: {0} ({1} files, {2}).",
+  "backupFail": " {0} files could not be added.",
+  "backupError": "Backup failed: {0}",
+  "backupFilter": "ZIP file (*.zip)|*.zip",
+  "backupFile": "Mods-Backup"
  },
  "de": {
   "modes": [
@@ -261,7 +273,18 @@ LANG = json.loads(r'''{
   "updNsfw": "Mod List: SFW + NSFW (Inhalte für Erwachsene, ab 18)",
   "trashing": "Wird bearbeitet ...",
   "notModsFolder": "Diese Suche braucht deinen Mods-Ordner (oder einen Ordner darin). Der gewählte Ordner liegt nicht in einem Ordner namens \"Mods\".",
-  "skippedNotEmpty": " {0} Ordner wurden übersprungen, weil sie nicht (mehr) leer sind."
+  "skippedNotEmpty": " {0} Ordner wurden übersprungen, weil sie nicht (mehr) leer sind.",
+  "themeSystem": "Design: System",
+  "themeLight": "Design: Hell",
+  "themeDark": "Design: Dunkel",
+  "btnBackup": "Mods-Ordner sichern",
+  "backupInside": "Bitte speichere die Sicherung außerhalb des Ordners, den du sichern willst.",
+  "backingUp": "Erstelle Sicherung: {0} von {1} Dateien ...",
+  "backupDone": "Sicherung gespeichert: {0} ({1} Dateien, {2}).",
+  "backupFail": " {0} Dateien konnten nicht hinzugefügt werden.",
+  "backupError": "Sicherung fehlgeschlagen: {0}",
+  "backupFilter": "ZIP-Datei (*.zip)|*.zip",
+  "backupFile": "Mods-Sicherung"
  },
  "es": {
   "modes": [
@@ -378,7 +401,18 @@ LANG = json.loads(r'''{
   "updNsfw": "Mod List: SFW + NSFW (contenido para adultos, +18)",
   "trashing": "Procesando ...",
   "notModsFolder": "Esta búsqueda necesita tu carpeta Mods (o una carpeta dentro de ella). La carpeta elegida no está dentro de una carpeta llamada \"Mods\".",
-  "skippedNotEmpty": " Se omitieron {0} carpetas porque (ya) no están vacías."
+  "skippedNotEmpty": " Se omitieron {0} carpetas porque (ya) no están vacías.",
+  "themeSystem": "Tema: Sistema",
+  "themeLight": "Tema: Claro",
+  "themeDark": "Tema: Oscuro",
+  "btnBackup": "Copia de seguridad de Mods",
+  "backupInside": "Guarda la copia de seguridad fuera de la carpeta que quieres copiar.",
+  "backingUp": "Creando copia de seguridad: {0} de {1} archivos ...",
+  "backupDone": "Copia de seguridad guardada: {0} ({1} archivos, {2}).",
+  "backupFail": " No se pudieron añadir {0} archivos.",
+  "backupError": "Error en la copia de seguridad: {0}",
+  "backupFilter": "Archivo ZIP (*.zip)|*.zip",
+  "backupFile": "Copia-Mods"
  },
  "fr": {
   "modes": [
@@ -495,7 +529,18 @@ LANG = json.loads(r'''{
   "updNsfw": "Mod List : SFW + NSFW (contenu adulte, 18+)",
   "trashing": "Traitement en cours ...",
   "notModsFolder": "Cette recherche nécessite votre dossier Mods (ou un dossier à l'intérieur). Le dossier choisi ne se trouve pas dans un dossier nommé \"Mods\".",
-  "skippedNotEmpty": " {0} dossiers ont été ignorés car ils ne sont pas (ou plus) vides."
+  "skippedNotEmpty": " {0} dossiers ont été ignorés car ils ne sont pas (ou plus) vides.",
+  "themeSystem": "Thème : Système",
+  "themeLight": "Thème : Clair",
+  "themeDark": "Thème : Sombre",
+  "btnBackup": "Sauvegarder le dossier Mods",
+  "backupInside": "Veuillez enregistrer la sauvegarde en dehors du dossier à sauvegarder.",
+  "backingUp": "Création de la sauvegarde : {0} sur {1} fichiers ...",
+  "backupDone": "Sauvegarde enregistrée : {0} ({1} fichiers, {2}).",
+  "backupFail": " {0} fichiers n'ont pas pu être ajoutés.",
+  "backupError": "Échec de la sauvegarde : {0}",
+  "backupFilter": "Fichier ZIP (*.zip)|*.zip",
+  "backupFile": "Sauvegarde-Mods"
  },
  "pl": {
   "modes": [
@@ -612,7 +657,18 @@ LANG = json.loads(r'''{
   "updNsfw": "Mod List: SFW + NSFW (treści dla dorosłych, 18+)",
   "trashing": "Przetwarzanie ...",
   "notModsFolder": "To wyszukiwanie wymaga folderu Mods (lub folderu wewnątrz niego). Wybrany folder nie znajduje się w folderze o nazwie \"Mods\".",
-  "skippedNotEmpty": " Pominięto folderów: {0}, ponieważ nie są (już) puste."
+  "skippedNotEmpty": " Pominięto folderów: {0}, ponieważ nie są (już) puste.",
+  "themeSystem": "Motyw: systemowy",
+  "themeLight": "Motyw: jasny",
+  "themeDark": "Motyw: ciemny",
+  "btnBackup": "Kopia zapasowa folderu Mods",
+  "backupInside": "Zapisz kopię zapasową poza folderem, który chcesz zabezpieczyć.",
+  "backingUp": "Tworzenie kopii zapasowej: {0} z {1} plików ...",
+  "backupDone": "Zapisano kopię zapasową: {0} (plików: {1}, {2}).",
+  "backupFail": " Nie udało się dodać plików: {0}.",
+  "backupError": "Tworzenie kopii zapasowej nie powiodło się: {0}",
+  "backupFilter": "Plik ZIP (*.zip)|*.zip",
+  "backupFile": "Kopia-Mods"
  },
  "pt": {
   "modes": [
@@ -729,7 +785,18 @@ LANG = json.loads(r'''{
   "updNsfw": "Mod List: SFW + NSFW (conteúdo adulto, 18+)",
   "trashing": "Processando ...",
   "notModsFolder": "Esta pesquisa precisa da sua pasta Mods (ou de uma pasta dentro dela). A pasta escolhida não está dentro de uma pasta chamada \"Mods\".",
-  "skippedNotEmpty": " {0} pastas foram ignoradas porque não estão (mais) vazias."
+  "skippedNotEmpty": " {0} pastas foram ignoradas porque não estão (mais) vazias.",
+  "themeSystem": "Tema: Sistema",
+  "themeLight": "Tema: Claro",
+  "themeDark": "Tema: Escuro",
+  "btnBackup": "Fazer backup da pasta Mods",
+  "backupInside": "Salve o backup fora da pasta que você quer copiar.",
+  "backingUp": "Criando backup: {0} de {1} arquivos ...",
+  "backupDone": "Backup salvo: {0} ({1} arquivos, {2}).",
+  "backupFail": " {0} arquivos não puderam ser adicionados.",
+  "backupError": "Falha no backup: {0}",
+  "backupFilter": "Arquivo ZIP (*.zip)|*.zip",
+  "backupFile": "Backup-Mods"
  }
 }''')
 
@@ -779,6 +846,73 @@ def save_language(code):
         pass
 
 
+THEME_CODES = ['system', 'light', 'dark']
+
+
+def load_last_folder():
+    try:
+        with open(os.path.join(settings_dir(), 'folder.txt'), encoding='utf-8') as f:
+            path = f.read().strip()
+        if path and os.path.isdir(path):
+            return path
+    except OSError:
+        pass
+    return None
+
+
+def save_last_folder(path):
+    try:
+        os.makedirs(settings_dir(), exist_ok=True)
+        with open(os.path.join(settings_dir(), 'folder.txt'), 'w', encoding='utf-8') as f:
+            f.write(path)
+    except OSError:
+        pass
+
+
+def load_theme():
+    try:
+        with open(os.path.join(settings_dir(), 'theme.txt'), encoding='utf-8') as f:
+            code = f.read().strip()
+        if code in THEME_CODES:
+            return code
+    except OSError:
+        pass
+    return 'system'
+
+
+def save_theme(code):
+    try:
+        os.makedirs(settings_dir(), exist_ok=True)
+        with open(os.path.join(settings_dir(), 'theme.txt'), 'w', encoding='utf-8') as f:
+            f.write(code)
+    except OSError:
+        pass
+
+
+def system_is_dark():
+    """Reads the light or dark setting of macOS, GNOME or KDE."""
+    try:
+        if IS_MAC:
+            out = subprocess.run(['defaults', 'read', '-g', 'AppleInterfaceStyle'],
+                                 capture_output=True, text=True, timeout=3).stdout
+            return 'dark' in out.lower()
+        if shutil.which('gsettings'):
+            for key in ('color-scheme', 'gtk-theme'):
+                out = subprocess.run(['gsettings', 'get', 'org.gnome.desktop.interface', key],
+                                     capture_output=True, text=True, timeout=3).stdout.lower()
+                if 'dark' in out:
+                    return True
+        kde = os.path.expanduser('~/.config/kdeglobals')
+        if os.path.isfile(kde):
+            with open(kde, encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if line.lower().startswith('colorscheme=') and 'dark' in line.lower():
+                        return True
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return False
+
+
 # =====================================================================
 # Finding the Sims 4 folder
 # =====================================================================
@@ -818,16 +952,39 @@ def find_sims_folder(mods_hint=None):
                     or os.path.exists(os.path.join(parent, 'localthumbcache.package'))
                     or os.path.exists(os.path.join(parent, 'Options.ini'))):
                 return parent
+    return find_best_sims_folder()
+
+
+def has_mods(mods):
+    """True if the folder contains at least one mod file."""
+    for _cur, _dirs, names in os.walk(mods):
+        for n in names:
+            if n.lower().endswith(SIMS_EXTS):
+                return True
+    return False
+
+
+def find_best_sims_folder():
+    """Sims 4 often creates two folders, e.g. "Die Sims 4" and "The Sims 4".
+    Pick the one that really has mods, and if both have, the one the game used last."""
+    best, best_score = None, None
     for d in document_folders():
         for n in SIMS_FOLDER_NAMES:
             c = os.path.join(d, 'Electronic Arts', n)
-            if os.path.isdir(c):
-                return c
-    return None
+            if not os.path.isdir(c):
+                continue
+            opt = os.path.join(c, 'Options.ini')
+            score = (has_mods(os.path.join(c, 'Mods')), os.path.getmtime(opt) if os.path.isfile(opt) else 0)
+            if best is None or score > best_score:
+                best, best_score = c, score
+    return best
 
 
 def find_mods_folder():
-    sims = find_sims_folder()
+    last = load_last_folder()
+    if last:
+        return last
+    sims = find_best_sims_folder()
     if sims and os.path.isdir(os.path.join(sims, 'Mods')):
         return os.path.join(sims, 'Mods')
     docs = os.path.join(os.path.expanduser('~'), 'Documents')
@@ -1205,6 +1362,25 @@ def move_to_trash(paths, progress=lambda done, total: None):
     return done
 
 
+def backup_folder(root, target, progress=lambda done, total: None):
+    """Packs root with all subfolders into the ZIP file target. Returns (ok, failed)."""
+    root = os.path.abspath(root).rstrip(os.sep) or os.sep
+    files, _dirs, _bad = collect(root)
+    base = os.path.basename(root) or 'Backup'
+    ok = failed = 0
+    with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=1, allowZip64=True) as z:
+        for i, f in enumerate(files, 1):
+            rel = os.path.relpath(f['path'], root).replace(os.sep, '/')
+            try:
+                z.write(f['path'], base + '/' + rel)
+                ok += 1
+            except OSError:
+                failed += 1
+            if i % 20 == 0:
+                progress(i, len(files))
+    return ok, failed
+
+
 def show_in_folder(path):
     if IS_MAC:
         subprocess.Popen(['open', '-R', path])
@@ -1237,6 +1413,8 @@ def run_gui():
         def __init__(self, root):
             self.root = root
             self.lang = load_language()
+            self.theme = load_theme()
+            self.dark = False
             self.entries = {}       # iid -> entry
             self.checked = set()    # iids
             self.groups = []        # [{'header', 'iids'}]
@@ -1247,7 +1425,7 @@ def run_gui():
             self._progress = None
             self._result = None
 
-            root.geometry('1120x720')
+            root.geometry('1180x740')
             root.minsize(980, 480)
             try:
                 self.icon = tk.PhotoImage(file=os.path.join(APP_DIR, 'icon.png'))
@@ -1294,6 +1472,7 @@ def run_gui():
             self.btn_scan = ttk.Button(top, command=self.start_scan, style='Bold.TButton')
             self.btn_scan.grid(row=2, column=4, sticky='ew', padx=(8, 0))
 
+
             # Description of the selected search type, in red so it stands out
             self.lbl_hint = tk.Label(top, fg='#cd1e2d', font=self.bold_font, anchor='w', justify='left')
             self.lbl_hint.grid(row=3, column=0, columnspan=5, sticky='ew', pady=(6, 0))
@@ -1332,11 +1511,16 @@ def run_gui():
             self.btn_delete = ttk.Button(row1, command=self.delete_checked, style='Danger.TButton')
             for b in (self.btn_explorer, self.btn_auto, self.btn_all, self.btn_clear, self.btn_delete):
                 b.pack(side='left', padx=(0, 6))
+            # Light and dark mode choice at the bottom right
+            self.cmb_theme = ttk.Combobox(row1, state='readonly', width=20)
+            self.cmb_theme.pack(side='right')
+            self.cmb_theme.bind('<<ComboboxSelected>>', self.change_theme)
             self.btn_save = ttk.Button(row2, command=self.save_report)
             self.btn_move = ttk.Button(row2, command=self.move_checked)
             self.btn_update = ttk.Button(row2, command=self.show_update_menu)
             self.btn_cache = ttk.Button(row2, command=self.clear_cache)
-            for b in (self.btn_save, self.btn_move, self.btn_update, self.btn_cache):
+            self.btn_backup = ttk.Button(row2, command=self.backup_mods)
+            for b in (self.btn_save, self.btn_move, self.btn_update, self.btn_cache, self.btn_backup):
                 b.pack(side='left', padx=(0, 6))
             self.status = ttk.Label(bottom, anchor='w')
             self.status.pack(fill='x', pady=(6, 0))
@@ -1349,6 +1533,73 @@ def run_gui():
             self.btn_auto.state(['disabled'])
             self.btn_move.state(['disabled'])
             self.apply_language(first=True)
+            self.apply_theme()
+            self.root.after(3000, self.watch_system_theme)
+
+        # ----- light and dark mode -----
+        def change_theme(self, event=None):
+            self.theme = THEME_CODES[self.cmb_theme.current()]
+            save_theme(self.theme)
+            self.apply_theme()
+
+        def watch_system_theme(self):
+            # Follow the system when it switches between light and dark while ModSweep is open
+            if self.theme == 'system':
+                now = system_is_dark()
+                if now != self.dark:
+                    self.apply_theme()
+            self.root.after(3000, self.watch_system_theme)
+
+        def apply_theme(self):
+            dark = system_is_dark() if self.theme == 'system' else (self.theme == 'dark')
+            self.dark = dark
+            if IS_MAC:
+                # macOS draws the window itself: auto follows the system, aqua is light, darkaqua is dark
+                try:
+                    self.root.tk.call('::tk::unsupported::MacWindowStyle', 'appearance', self.root,
+                                      {'system': 'auto', 'light': 'aqua', 'dark': 'darkaqua'}[self.theme])
+                except tk.TclError:
+                    pass
+                fg = '#e8e8e8' if dark else '#1a1a1a'
+            else:
+                if dark:
+                    bg, field, fg, btn, sel, border = '#202020', '#2b2b2b', '#e8e8e8', '#37373a', '#264f78', '#505054'
+                else:
+                    bg, field, fg, btn, sel, border = '#f0f0f0', '#ffffff', '#1a1a1a', '#e1e1e1', '#cce4f7', '#a0a0a0'
+                st = ttk.Style()
+                try:
+                    st.theme_use('clam')
+                except tk.TclError:
+                    pass
+                st.configure('.', background=bg, foreground=fg, fieldbackground=field, bordercolor=border,
+                             lightcolor=bg, darkcolor=bg, troughcolor=bg, insertcolor=fg)
+                st.configure('TButton', background=btn, foreground=fg)
+                st.map('TButton', background=[('active', sel), ('disabled', bg)],
+                       foreground=[('disabled', '#808080')])
+                st.configure('TEntry', fieldbackground=field, foreground=fg)
+                st.map('TEntry', fieldbackground=[('disabled', bg)])
+                st.configure('TCombobox', fieldbackground=field, background=btn, foreground=fg, arrowcolor=fg)
+                st.map('TCombobox', fieldbackground=[('readonly', field)], foreground=[('readonly', fg)],
+                       selectbackground=[('readonly', field)], selectforeground=[('readonly', fg)])
+                st.configure('TCheckbutton', background=bg, foreground=fg, indicatorbackground=field)
+                st.map('TCheckbutton', background=[('active', bg)], foreground=[('disabled', '#808080')])
+                st.configure('Treeview', background=field, fieldbackground=field, foreground=fg)
+                st.map('Treeview', background=[('selected', sel)], foreground=[('selected', fg)])
+                st.configure('Treeview.Heading', background=btn, foreground=fg)
+                st.map('Treeview.Heading', background=[('active', sel)])
+                st.configure('Vertical.TScrollbar', background=btn, arrowcolor=fg)
+                st.configure('Bold.TButton', font=self.bold_font)
+                self.root.configure(bg=bg)
+                self.root.option_add('*TCombobox*Listbox.background', field)
+                self.root.option_add('*TCombobox*Listbox.foreground', fg)
+                self.root.option_add('*TCombobox*Listbox.selectBackground', sel)
+                self.root.option_add('*TCombobox*Listbox.selectForeground', fg)
+                self.upd_menu.configure(bg=field, fg=fg, activebackground=sel, activeforeground=fg)
+                self.lbl_hint.configure(bg=bg)
+            ttk.Style().configure('Danger.TButton', foreground='#ff6e6e' if dark else '#a01010')
+            self.lbl_hint.configure(fg='#ff5f64' if dark else '#cd1e2d')
+            self.tree.tag_configure('group', background='#3a3d41' if dark else '#e6edf2',
+                                    foreground=fg)
 
         # ----- language -----
         def T(self, key):
@@ -1373,13 +1624,16 @@ def run_gui():
             self.tree.heading('mark', text='')
             for b, k in ((self.btn_explorer, 'btnExplorer'), (self.btn_auto, 'btnAuto'), (self.btn_all, 'btnAll'),
                          (self.btn_clear, 'btnClear'), (self.btn_delete, 'btnDelete'), (self.btn_save, 'btnSave'),
-                         (self.btn_move, 'btnMove'), (self.btn_update, 'btnUpdate'), (self.btn_cache, 'btnCache')):
+                         (self.btn_move, 'btnMove'), (self.btn_update, 'btnUpdate'), (self.btn_cache, 'btnCache'),
+                         (self.btn_backup, 'btnBackup')):
                 b.configure(text=T(k))
             self.upd_menu.entryconfigure(0, label=T('updSfw'))
             self.upd_menu.entryconfigure(1, label=T('updNsfw'))
             sel = 0 if first else max(0, self.cmb_mode.current())
             self.cmb_mode.configure(values=LANG[self.lang]['modes'])
             self.cmb_mode.current(sel)
+            self.cmb_theme.configure(values=[T('themeSystem'), T('themeLight'), T('themeDark')])
+            self.cmb_theme.current(THEME_CODES.index(self.theme))
             self.update_mode_controls()
             if self.groups:
                 self.render()
@@ -1520,6 +1774,7 @@ def run_gui():
                                         initialdir=self.var_folder.get() or os.path.expanduser('~'))
             if d:
                 self.var_folder.set(d)
+                save_last_folder(d)
 
         def start_scan(self):
             if self.busy:
@@ -1537,6 +1792,7 @@ def run_gui():
                     return
             sims_only = self.var_sims.get()
             lang_T = self.T
+            save_last_folder(os.path.abspath(root_path))
 
             def progress(text):
                 self._progress = text
@@ -1605,6 +1861,7 @@ def run_gui():
         def clear_marks(self):
             self.checked.clear()
             self.refresh_marks()
+            self.status.configure(text=self.T('allMarked').format(0))
 
         def remove_entries(self, iids):
             iids = set(iids)
@@ -1728,6 +1985,45 @@ def run_gui():
         def open_list(self, url):
             webbrowser.open(url)
             self.status.configure(text=self.T('updateOpened'))
+
+        def backup_mods(self):
+            if self.busy:
+                return
+            root_path = self.var_folder.get().strip()
+            if not root_path or not os.path.isdir(root_path):
+                self.warn(self.T('folderNotFound'))
+                return
+            root_path = os.path.abspath(root_path)
+            name = '%s_%s.zip' % (self.T('backupFile'), datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+            docs = os.path.join(os.path.expanduser('~'), 'Documents')
+            target = filedialog.asksaveasfilename(
+                parent=self.root, initialfile=name, defaultextension='.zip',
+                initialdir=docs if os.path.isdir(docs) else os.path.expanduser('~'),
+                filetypes=[(self.T('backupFilter').split('|')[0], '*.zip')])
+            if not target:
+                return
+            # The backup must not be inside the folder it backs up
+            if os.path.abspath(target).startswith(root_path.rstrip(os.sep) + os.sep):
+                self.warn(self.T('backupInside'))
+                return
+            T = self.T
+
+            def progress(done_count, total):
+                self._progress = T('backingUp').format(done_count, total)
+
+            def done(result):
+                ok, failed = result
+                try:
+                    size = format_size(os.path.getsize(target))
+                except OSError:
+                    size = ''
+                msg = self.T('backupDone').format(target, ok, size)
+                if failed:
+                    msg += self.T('backupFail').format(failed)
+                self.status.configure(text=msg)
+
+            self.status.configure(text=self.T('collecting'))
+            self.run_background(lambda: backup_folder(root_path, target, progress), done)
 
         def clear_cache(self):
             if self.busy:

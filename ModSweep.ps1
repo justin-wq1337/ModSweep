@@ -16,6 +16,47 @@ using System.Collections;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
+public static class ThemeHelper {
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+    [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+    private static extern int SetWindowTheme(IntPtr hwnd, string appName, string idList);
+
+    // Dark or light title bar (Windows 10 20H1 and newer, Windows 11)
+    public static void SetDarkTitleBar(IntPtr hwnd, bool dark) {
+        int v = dark ? 1 : 0;
+        try {
+            if (DwmSetWindowAttribute(hwnd, 20, ref v, 4) != 0) { DwmSetWindowAttribute(hwnd, 19, ref v, 4); }
+        } catch { }
+    }
+    // "DarkMode_ItemsView" is the dark look of the Explorer file list, "Explorer" the normal look
+    public static void SetTheme(IntPtr hwnd, string name) {
+        try { SetWindowTheme(hwnd, name, null); } catch { }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LVGROUPMETRICS {
+        public int cbSize; public int mask;
+        public int Left; public int Top; public int Right; public int Bottom;
+        public int crLeft; public int crTop; public int crRight; public int crBottom;
+        public int crHeader; public int crFooter;
+    }
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr wParam, ref LVGROUPMETRICS lParam);
+
+    // Text color of the group headers in a ListView (LVM_SETGROUPMETRICS with LVGMF_TEXTCOLOR)
+    public static void SetGroupHeaderColor(IntPtr hwnd, int r, int g, int b) {
+        try {
+            LVGROUPMETRICS m = new LVGROUPMETRICS();
+            m.cbSize = Marshal.SizeOf(typeof(LVGROUPMETRICS));
+            m.mask = 0x4;
+            m.crHeader = r | (g << 8) | (b << 16);
+            m.crFooter = m.crHeader;
+            SendMessage(hwnd, 0x109B, IntPtr.Zero, ref m);
+        } catch { }
+    }
+}
+
 public static class Recycler {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct SHFILEOPSTRUCT {
@@ -165,6 +206,15 @@ $Lang['en'] = @{
     browseDesc = 'Choose a folder, e.g. your Sims 4 Mods folder'
     updateOpened = 'Scarlet''s Mod List was opened in your browser. Search for your mod there (Ctrl+F).'
     updSfw = 'Mod List: SFW only (no adult content)'; updNsfw = 'Mod List: SFW + NSFW (adult content, 18+)'
+    btnBackup = 'Backup Mods folder'
+    backupInside = 'Please save the backup outside the folder you want to back up.'
+    backingUp = 'Creating backup: {0} of {1} files ...'
+    backupDone = 'Backup saved: {0} ({1} files, {2}).'
+    backupFail = ' {0} files could not be added.'
+    backupError = 'Backup failed: {0}'
+    backupFilter = 'ZIP file (*.zip)|*.zip'
+    backupFile = 'Mods-Backup'
+    themeSystem = 'Theme: System'; themeLight = 'Theme: Light'; themeDark = 'Theme: Dark'
     notModsFolder = 'This search needs your Mods folder (or a folder inside it). The selected folder is not inside a folder named "Mods".'
     skippedNotEmpty = ' {0} folders were skipped because they are not empty (anymore).'
 }
@@ -252,6 +302,15 @@ $Lang['de'] = @{
     browseDesc = 'Ordner auswählen, z. B. deinen Sims 4 Mods-Ordner'
     updateOpened = 'Scarlet''s Mod List wurde im Browser geöffnet. Dort nach dem Namen deiner Mod suchen (Strg+F).'
     updSfw = 'Mod List: nur SFW (ohne Inhalte für Erwachsene)'; updNsfw = 'Mod List: SFW + NSFW (Inhalte für Erwachsene, ab 18)'
+    btnBackup = 'Mods-Ordner sichern'
+    backupInside = 'Bitte speichere die Sicherung außerhalb des Ordners, den du sichern willst.'
+    backingUp = 'Erstelle Sicherung: {0} von {1} Dateien ...'
+    backupDone = 'Sicherung gespeichert: {0} ({1} Dateien, {2}).'
+    backupFail = ' {0} Dateien konnten nicht hinzugefügt werden.'
+    backupError = 'Sicherung fehlgeschlagen: {0}'
+    backupFilter = 'ZIP-Datei (*.zip)|*.zip'
+    backupFile = 'Mods-Sicherung'
+    themeSystem = 'Design: System'; themeLight = 'Design: Hell'; themeDark = 'Design: Dunkel'
     notModsFolder = 'Diese Suche braucht deinen Mods-Ordner (oder einen Ordner darin). Der gewählte Ordner liegt nicht in einem Ordner namens "Mods".'
     skippedNotEmpty = ' {0} Ordner wurden übersprungen, weil sie nicht (mehr) leer sind.'
 }
@@ -339,6 +398,15 @@ $Lang['es'] = @{
     browseDesc = 'Elige una carpeta, p. ej. tu carpeta Mods de Los Sims 4'
     updateOpened = 'La Mod List de Scarlet se abrió en el navegador. Busca allí el nombre de tu mod (Ctrl+F).'
     updSfw = 'Mod List: solo SFW (sin contenido para adultos)'; updNsfw = 'Mod List: SFW + NSFW (contenido para adultos, +18)'
+    btnBackup = 'Copia de seguridad de Mods'
+    backupInside = 'Guarda la copia de seguridad fuera de la carpeta que quieres copiar.'
+    backingUp = 'Creando copia de seguridad: {0} de {1} archivos ...'
+    backupDone = 'Copia de seguridad guardada: {0} ({1} archivos, {2}).'
+    backupFail = ' No se pudieron añadir {0} archivos.'
+    backupError = 'Error en la copia de seguridad: {0}'
+    backupFilter = 'Archivo ZIP (*.zip)|*.zip'
+    backupFile = 'Copia-Mods'
+    themeSystem = 'Tema: Sistema'; themeLight = 'Tema: Claro'; themeDark = 'Tema: Oscuro'
     notModsFolder = 'Esta búsqueda necesita tu carpeta Mods (o una carpeta dentro de ella). La carpeta elegida no está dentro de una carpeta llamada "Mods".'
     skippedNotEmpty = ' Se omitieron {0} carpetas porque (ya) no están vacías.'
 }
@@ -426,6 +494,15 @@ $Lang['fr'] = @{
     browseDesc = 'Choisissez un dossier, par ex. votre dossier Mods de Sims 4'
     updateOpened = 'La Mod List de Scarlet a été ouverte dans le navigateur. Cherchez-y le nom de votre mod (Ctrl+F).'
     updSfw = 'Mod List : SFW uniquement (sans contenu adulte)'; updNsfw = 'Mod List : SFW + NSFW (contenu adulte, 18+)'
+    btnBackup = 'Sauvegarder le dossier Mods'
+    backupInside = 'Veuillez enregistrer la sauvegarde en dehors du dossier à sauvegarder.'
+    backingUp = 'Création de la sauvegarde : {0} sur {1} fichiers ...'
+    backupDone = 'Sauvegarde enregistrée : {0} ({1} fichiers, {2}).'
+    backupFail = ' {0} fichiers n''ont pas pu être ajoutés.'
+    backupError = 'Échec de la sauvegarde : {0}'
+    backupFilter = 'Fichier ZIP (*.zip)|*.zip'
+    backupFile = 'Sauvegarde-Mods'
+    themeSystem = 'Thème : Système'; themeLight = 'Thème : Clair'; themeDark = 'Thème : Sombre'
     notModsFolder = 'Cette recherche nécessite votre dossier Mods (ou un dossier à l''intérieur). Le dossier choisi ne se trouve pas dans un dossier nommé "Mods".'
     skippedNotEmpty = ' {0} dossiers ont été ignorés car ils ne sont pas (ou plus) vides.'
 }
@@ -513,6 +590,15 @@ $Lang['pl'] = @{
     browseDesc = 'Wybierz folder, np. folder Mods gry The Sims 4'
     updateOpened = 'Mod List od Scarlet otwarto w przeglądarce. Wyszukaj tam nazwę swojego moda (Ctrl+F).'
     updSfw = 'Mod List: tylko SFW (bez treści dla dorosłych)'; updNsfw = 'Mod List: SFW + NSFW (treści dla dorosłych, 18+)'
+    btnBackup = 'Kopia zapasowa folderu Mods'
+    backupInside = 'Zapisz kopię zapasową poza folderem, który chcesz zabezpieczyć.'
+    backingUp = 'Tworzenie kopii zapasowej: {0} z {1} plików ...'
+    backupDone = 'Zapisano kopię zapasową: {0} (plików: {1}, {2}).'
+    backupFail = ' Nie udało się dodać plików: {0}.'
+    backupError = 'Tworzenie kopii zapasowej nie powiodło się: {0}'
+    backupFilter = 'Plik ZIP (*.zip)|*.zip'
+    backupFile = 'Kopia-Mods'
+    themeSystem = 'Motyw: systemowy'; themeLight = 'Motyw: jasny'; themeDark = 'Motyw: ciemny'
     notModsFolder = 'To wyszukiwanie wymaga folderu Mods (lub folderu wewnątrz niego). Wybrany folder nie znajduje się w folderze o nazwie "Mods".'
     skippedNotEmpty = ' Pominięto folderów: {0}, ponieważ nie są (już) puste.'
 }
@@ -600,6 +686,15 @@ $Lang['pt'] = @{
     browseDesc = 'Escolha uma pasta, ex. sua pasta Mods do The Sims 4'
     updateOpened = 'A Mod List da Scarlet foi aberta no navegador. Procure lá o nome do seu mod (Ctrl+F).'
     updSfw = 'Mod List: somente SFW (sem conteúdo adulto)'; updNsfw = 'Mod List: SFW + NSFW (conteúdo adulto, 18+)'
+    btnBackup = 'Fazer backup da pasta Mods'
+    backupInside = 'Salve o backup fora da pasta que você quer copiar.'
+    backingUp = 'Criando backup: {0} de {1} arquivos ...'
+    backupDone = 'Backup salvo: {0} ({1} arquivos, {2}).'
+    backupFail = ' {0} arquivos não puderam ser adicionados.'
+    backupError = 'Falha no backup: {0}'
+    backupFilter = 'Arquivo ZIP (*.zip)|*.zip'
+    backupFile = 'Backup-Mods'
+    themeSystem = 'Tema: Sistema'; themeLight = 'Tema: Claro'; themeDark = 'Tema: Escuro'
     notModsFolder = 'Esta pesquisa precisa da sua pasta Mods (ou de uma pasta dentro dela). A pasta escolhida não está dentro de uma pasta chamada "Mods".'
     skippedNotEmpty = ' {0} pastas foram ignoradas porque não estão (mais) vazias.'
 }
@@ -614,6 +709,29 @@ try {
         if ($LangCodes -contains $saved) { $script:curLang = $saved }
     }
 } catch { }
+
+# Remember the chosen theme: system (follow Windows), light or dark
+$ThemeCodes = @('system', 'light', 'dark')
+$themeFile = Join-Path $settingsDir 'theme.txt'
+$script:theme = 'system'
+try {
+    if (Test-Path -LiteralPath $themeFile) {
+        $savedTheme = (Get-Content -LiteralPath $themeFile -ErrorAction Stop | Select-Object -First 1).Trim()
+        if ($ThemeCodes -contains $savedTheme) { $script:theme = $savedTheme }
+    }
+} catch { }
+$script:isDark = $false
+$script:fgColor = [System.Drawing.SystemColors]::ControlText
+$script:fgDim = [System.Drawing.Color]::FromArgb(150, 150, 150)
+
+# Remember the last folder that was searched
+$folderFile = Join-Path $settingsDir 'folder.txt'
+function Save-LastFolder([string]$path) {
+    try {
+        if (-not (Test-Path -LiteralPath $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null }
+        Set-Content -LiteralPath $folderFile -Value $path -Encoding UTF8 -ErrorAction Stop
+    } catch { }
+}
 
 function T([string]$key) {
     $v = $Lang[$script:curLang][$key]
@@ -632,7 +750,7 @@ function Ask-YesNo([string]$text, [string]$titleKey = 'tConfirm') {
 # =====================================================================
 # Helpers
 # =====================================================================
-$AppVersion = '1.0.1'
+$AppVersion = '1.1.0'
 $script:lastMode = -1
 $script:sorter = New-Object ModSorter
 
@@ -641,13 +759,49 @@ $MODE_JUNK = 4; $MODE_EMPTY = 5; $MODE_BIG = 6; $MODE_DEPTH = 7
 
 $simsFolderNames = @('The Sims 4', 'Die Sims 4', 'Les Sims 4', 'Los Sims 4', 'De Sims 4', 'I Sims 4')
 
-function Find-SimsModsFolder {
+# True if the folder contains at least one mod file
+function Test-HasMods([string]$mods) {
+    if (-not (Test-Path -LiteralPath $mods -PathType Container)) { return $false }
+    try {
+        foreach ($f in [System.IO.Directory]::EnumerateFiles($mods, '*', [System.IO.SearchOption]::AllDirectories)) {
+            if ($f.EndsWith('.package', [System.StringComparison]::OrdinalIgnoreCase) -or
+                $f.EndsWith('.ts4script', [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+        }
+    } catch { }
+    return $false
+}
+
+# Sims 4 often creates two folders, e.g. "Die Sims 4" and "The Sims 4".
+# Pick the one that really has mods, and if both have, the one the game used last.
+function Find-BestSimsFolder {
     $docs = [Environment]::GetFolderPath('MyDocuments')
+    $best = $null; $bestScore = $null
     foreach ($n in $simsFolderNames) {
-        $c = Join-Path $docs "Electronic Arts\$n\Mods"
-        if (Test-Path -LiteralPath $c) { return $c }
+        $c = Join-Path $docs "Electronic Arts\$n"
+        if (-not (Test-Path -LiteralPath $c -PathType Container)) { continue }
+        $hasMods = Test-HasMods (Join-Path $c 'Mods')
+        $opt = Join-Path $c 'Options.ini'
+        $used = $(if (Test-Path -LiteralPath $opt) { (Get-Item -LiteralPath $opt).LastWriteTime } else { [DateTime]::MinValue })
+        $score = @([int]$hasMods, $used)
+        if (-not $best -or $score[0] -gt $bestScore[0] -or ($score[0] -eq $bestScore[0] -and $score[1] -gt $bestScore[1])) {
+            $best = $c; $bestScore = $score
+        }
     }
-    return $docs
+    return $best
+}
+
+function Find-SimsModsFolder {
+    # 1. The folder used last time
+    try {
+        if (Test-Path -LiteralPath $folderFile) {
+            $last = (Get-Content -LiteralPath $folderFile -Encoding UTF8 -ErrorAction Stop | Select-Object -First 1).Trim()
+            if ($last -and (Test-Path -LiteralPath $last -PathType Container)) { return $last }
+        }
+    } catch { }
+    # 2. The Sims 4 folder that really has mods
+    $sims = Find-BestSimsFolder
+    if ($sims -and (Test-Path -LiteralPath (Join-Path $sims 'Mods'))) { return (Join-Path $sims 'Mods') }
+    return [Environment]::GetFolderPath('MyDocuments')
 }
 
 function Find-SimsFolder {
@@ -662,12 +816,7 @@ function Find-SimsFolder {
             return $parent
         }
     }
-    $docs = [Environment]::GetFolderPath('MyDocuments')
-    foreach ($n in $simsFolderNames) {
-        $c = Join-Path $docs "Electronic Arts\$n"
-        if (Test-Path -LiteralPath $c) { return $c }
-    }
-    return $null
+    return (Find-BestSimsFolder)
 }
 
 function Format-Size([long]$bytes) {
@@ -764,7 +913,7 @@ function Find-ModsBase([string]$path) {
 # Window
 # =====================================================================
 $form = New-Object System.Windows.Forms.Form
-$form.Size = New-Object System.Drawing.Size(980, 700)
+$form.Size = New-Object System.Drawing.Size(1140, 720)
 $form.MinimumSize = New-Object System.Drawing.Size(940, 460)
 $form.StartPosition = 'CenterScreen'
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
@@ -887,6 +1036,11 @@ $lblHint.Anchor = 'Top, Left, Right'
 $lblHint.ForeColor = [System.Drawing.Color]::FromArgb(205, 30, 45)
 $lblHint.Font = New-Object System.Drawing.Font('Segoe UI', 9.5, [System.Drawing.FontStyle]::Bold)
 
+$cmbTheme = New-Object System.Windows.Forms.ComboBox
+$cmbTheme.DropDownStyle = 'DropDownList'
+$cmbTheme.Location = New-Object System.Drawing.Point(10, 10)
+$cmbTheme.Width = 170
+
 $top.Controls.AddRange(@($lblHint, $lblFolder, $txtFolder, $btnBrowse, $lblMode, $cmbMode, $lblExt, $txtExt, $cmbLang, $chkSims, $btnScan))
 
 # List
@@ -938,14 +1092,23 @@ $btnSave     = New-FlowButton
 $btnMove     = New-FlowButton
 $btnUpdate   = New-FlowButton
 $btnCache    = New-FlowButton
+$btnBackup   = New-FlowButton
 
 # Menu for the update button: users choose SFW or SFW + NSFW themselves
 $updMenu = New-Object System.Windows.Forms.ContextMenuStrip
 $miSfw = $updMenu.Items.Add('')
 $miNsfw = $updMenu.Items.Add('')
 
+# Light and dark mode choice at the bottom right
+$themePanel = New-Object System.Windows.Forms.Panel
+$themePanel.Dock = 'Right'
+$themePanel.Width = 185
+$themePanel.Controls.Add($cmbTheme)
+
 $bottom.Controls.Add($flow)
+$bottom.Controls.Add($themePanel)
 $bottom.Controls.Add($status)
+$themePanel.BringToFront()
 $flow.BringToFront()
 
 $form.Controls.Add($list)
@@ -954,8 +1117,16 @@ $form.Controls.Add($bottom)
 $list.BringToFront()
 $form.AcceptButton = $btnScan
 
+# The last column always fills the rest of the list, so no empty (white) header area is left
+function Update-ListColumns {
+    if ($list.Columns.Count -lt 4 -or $list.ClientSize.Width -le 0) { return }
+    $used = 0
+    for ($i = 0; $i -lt 3; $i++) { $used += $list.Columns[$i].Width }
+    $list.Columns[3].Width = [Math]::Max(120, $list.ClientSize.Width - $used)
+}
+
 function Update-BottomLayout {
-    $w = [Math]::Max(200, $bottom.ClientSize.Width)
+    $w = [Math]::Max(200, $bottom.ClientSize.Width - $themePanel.Width)
     $pref = $flow.GetPreferredSize((New-Object System.Drawing.Size($w, 0)))
     $bottom.Height = $pref.Height + $status.Height + 6
 }
@@ -978,7 +1149,8 @@ function Update-ModeControls {
     $m = $cmbMode.SelectedIndex
     $chkSims.Enabled = ($m -in @($MODE_HASH, $MODE_NAME, $MODE_VERSION, $MODE_BIG))
     $txtExt.Enabled = ($m -eq $MODE_TYPE)
-    $lblExt.Enabled = $txtExt.Enabled
+    # Labels are not disabled (Windows would draw them blurry), they are only greyed out
+    $lblExt.ForeColor = $(if ($txtExt.Enabled) { $script:fgColor } else { $script:fgDim })
     if ($m -ge 0) { $lblHint.Text = $Lang[$script:curLang]['hints'][$m] }
 }
 
@@ -1003,6 +1175,7 @@ function Apply-Language {
     $btnMove.Text = T 'btnMove'
     $btnUpdate.Text = T 'btnUpdate'
     $btnCache.Text = T 'btnCache'
+    $btnBackup.Text = T 'btnBackup'
     $miSfw.Text = T 'updSfw'
     $miNsfw.Text = T 'updNsfw'
 
@@ -1013,9 +1186,85 @@ function Apply-Language {
     $cmbMode.EndUpdate()
     $cmbMode.SelectedIndex = $sel
 
+    $script:fillingTheme = $true
+    $cmbTheme.Items.Clear()
+    foreach ($k in @('themeSystem', 'themeLight', 'themeDark')) { $cmbTheme.Items.Add((T $k)) | Out-Null }
+    $cmbTheme.SelectedIndex = [Array]::IndexOf($ThemeCodes, $script:theme)
+    $script:fillingTheme = $false
+
     Update-TopLayout
     Update-BottomLayout
     Update-ModeControls
+}
+
+# =====================================================================
+# Light and dark mode
+# =====================================================================
+function Get-SystemDark {
+    try {
+        $v = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -Name 'AppsUseLightTheme' -ErrorAction Stop).AppsUseLightTheme
+        return ($v -eq 0)
+    } catch { return $false }
+}
+
+function Apply-Theme {
+    switch ($script:theme) {
+        'dark'  { $dark = $true }
+        'light' { $dark = $false }
+        default { $dark = Get-SystemDark }
+    }
+    $script:isDark = $dark
+    $Col = [System.Drawing.Color]
+    if ($dark) {
+        $bg = $Col::FromArgb(32, 32, 32); $field = $Col::FromArgb(43, 43, 43); $fg = $Col::FromArgb(232, 232, 232)
+        $btnBg = $Col::FromArgb(55, 55, 58); $border = $Col::FromArgb(80, 80, 84)
+    } else {
+        $bg = [System.Drawing.SystemColors]::Control; $field = [System.Drawing.SystemColors]::Window
+        $fg = [System.Drawing.SystemColors]::ControlText
+    }
+    foreach ($c in @($form, $top, $bottom, $flow, $themePanel)) { $c.BackColor = $bg }
+    $script:fgColor = $fg
+    $script:fgDim = $(if ($dark) { $Col::FromArgb(120, 120, 124) } else { $Col::FromArgb(150, 150, 150) })
+    foreach ($c in @($lblFolder, $lblMode, $lblExt, $status, $chkSims)) { $c.ForeColor = $fg; $c.BackColor = $bg }
+    foreach ($c in @($txtFolder, $txtExt)) {
+        $c.BackColor = $field; $c.ForeColor = $fg
+        $c.BorderStyle = $(if ($dark) { 'FixedSingle' } else { 'Fixed3D' })
+    }
+    $script:fieldColor = $field
+    $script:selColor = $(if ($dark) { $Col::FromArgb(38, 79, 120) } else { [System.Drawing.SystemColors]::Highlight })
+    $script:selText = $(if ($dark) { $fg } else { [System.Drawing.SystemColors]::HighlightText })
+    foreach ($c in @($cmbMode, $cmbLang, $cmbTheme)) {
+        $c.FlatStyle = $(if ($dark) { 'Flat' } else { 'Standard' })
+        $c.BackColor = $field; $c.ForeColor = $fg
+        $c.Invalidate()
+    }
+    $list.BackColor = $field; $list.ForeColor = $fg
+    $list.OwnerDraw = $dark   # only the column headers are drawn by ModSweep, see DrawColumnHeader
+    foreach ($b in @($btnBrowse, $btnScan, $btnExplorer, $btnAuto, $btnAll, $btnClear, $btnDelete, $btnSave, $btnMove, $btnUpdate, $btnCache, $btnBackup)) {
+        if ($dark) {
+            $b.FlatStyle = 'Flat'
+            $b.BackColor = $btnBg
+            $b.ForeColor = $fg
+            $b.FlatAppearance.BorderColor = $border
+        } else {
+            $b.FlatStyle = 'Standard'
+            $b.BackColor = [System.Drawing.SystemColors]::Control
+            $b.UseVisualStyleBackColor = $true
+            $b.ForeColor = [System.Drawing.SystemColors]::ControlText
+        }
+    }
+    $btnDelete.ForeColor = $(if ($dark) { $Col::FromArgb(255, 110, 110) } else { $Col::DarkRed })
+    $lblHint.BackColor = $bg
+    $lblHint.ForeColor = $(if ($dark) { $Col::FromArgb(255, 95, 100) } else { $Col::FromArgb(205, 30, 45) })
+    $updMenu.BackColor = $field
+    foreach ($mi in $updMenu.Items) { $mi.ForeColor = $fg; $mi.BackColor = $field }
+    [ThemeHelper]::SetDarkTitleBar($form.Handle, $dark)
+    [ThemeHelper]::SetTheme($list.Handle, $(if ($dark) { 'DarkMode_ItemsView' } else { 'Explorer' }))
+    if ($dark) { [ThemeHelper]::SetGroupHeaderColor($list.Handle, 120, 190, 255) }
+    else { [ThemeHelper]::SetGroupHeaderColor($list.Handle, 0, 51, 153) }
+    Update-ModeControls
+    $list.Invalidate()
+    $form.Invalidate($true)
 }
 
 # =====================================================================
@@ -1074,6 +1323,7 @@ function Start-Scan {
         return
     }
     $root = (Resolve-Path -LiteralPath $rootInput).ProviderPath.TrimEnd('\')
+    Save-LastFolder $root
 
     $exts = @()
     if ($mode -eq $MODE_TYPE) {
@@ -1289,6 +1539,7 @@ function Start-Scan {
     }
     finally {
         $list.EndUpdate()
+        if ($script:isDark) { [ThemeHelper]::SetGroupHeaderColor($list.Handle, 120, 190, 255) }
         $btnScan.Enabled = $true
         $flow.Enabled = $true
         $form.Cursor = [System.Windows.Forms.Cursors]::Default
@@ -1451,6 +1702,94 @@ function Clear-SimsCache {
     $status.Text = $msg
 }
 
+function Backup-Mods {
+    $rootInput = $txtFolder.Text.Trim()
+    if (-not $rootInput -or -not (Test-Path -LiteralPath $rootInput -PathType Container)) {
+        Show-Msg (T 'folderNotFound') 'tWarn' 'Warning'
+        return
+    }
+    $root = (Resolve-Path -LiteralPath $rootInput).ProviderPath.TrimEnd('\')
+    $dlg = New-Object System.Windows.Forms.SaveFileDialog
+    $dlg.Filter = T 'backupFilter'
+    $dlg.FileName = "$(T 'backupFile')_$(Get-Date -Format 'yyyy-MM-dd_HH-mm').zip"
+    $dlg.InitialDirectory = [Environment]::GetFolderPath('MyDocuments')
+    if ($dlg.ShowDialog() -ne 'OK') { return }
+    $target = $dlg.FileName
+    # The backup must not be inside the folder it backs up
+    if ($target.StartsWith($root + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+        Show-Msg (T 'backupInside') 'tWarn' 'Warning'
+        return
+    }
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    $flow.Enabled = $false
+    $btnScan.Enabled = $false
+    $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+    $status.Text = T 'collecting'
+    Update-Ui
+    $ok = 0; $fail = 0
+    try {
+        $files = @((Get-Tree $root).Files)
+        $base = Split-Path $root -Leaf
+        if (-not $base) { $base = 'Backup' }
+        if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Force -ErrorAction Stop }
+        $zip = [System.IO.Compression.ZipFile]::Open($target, [System.IO.Compression.ZipArchiveMode]::Create)
+        try {
+            foreach ($f in $files) {
+                $rel = $f.FullName.Substring($root.Length).TrimStart('\') -replace '\\', '/'
+                try {
+                    [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                        $zip, $f.FullName, "$base/$rel", [System.IO.Compression.CompressionLevel]::Fastest)
+                    $ok++
+                } catch { $fail++ }
+                if (($ok + $fail) % 20 -eq 0) {
+                    $status.Text = (T 'backingUp') -f ($ok + $fail), $files.Count
+                    Update-Ui
+                }
+            }
+        }
+        finally { $zip.Dispose() }
+        $size = (Get-Item -LiteralPath $target).Length
+        $msg = (T 'backupDone') -f $target, $ok, (Format-Size $size)
+        if ($fail -gt 0) { $msg += (T 'backupFail') -f $fail }
+        $status.Text = $msg
+    }
+    catch {
+        Show-Msg ((T 'backupError') -f $_.Exception.Message) 'tError' 'Error'
+    }
+    finally {
+        $flow.Enabled = $true
+        $btnScan.Enabled = $true
+        $form.Cursor = [System.Windows.Forms.Cursors]::Default
+    }
+}
+
+# The selection lists are drawn by ModSweep, so they stay dark in dark mode
+$script:fieldColor = [System.Drawing.SystemColors]::Window
+$script:selColor = [System.Drawing.SystemColors]::Highlight
+$script:selText = [System.Drawing.SystemColors]::HighlightText
+$comboDraw = {
+    param($s, $e)
+    if ($e.Index -lt 0) { return }
+    $state = $e.State
+    $isEdit = ($state -band [System.Windows.Forms.DrawItemState]::ComboBoxEdit) -ne 0
+    $isSel = ($state -band [System.Windows.Forms.DrawItemState]::Selected) -ne 0
+    if ($isSel -and -not $isEdit) { $back = $script:selColor; $text = $script:selText }
+    else { $back = $script:fieldColor; $text = $script:fgColor }
+    $brush = New-Object System.Drawing.SolidBrush($back)
+    $e.Graphics.FillRectangle($brush, $e.Bounds)
+    $brush.Dispose()
+    $r = New-Object System.Drawing.Rectangle(($e.Bounds.X + 2), $e.Bounds.Y, [Math]::Max(0, $e.Bounds.Width - 4), $e.Bounds.Height)
+    $flags = [System.Windows.Forms.TextFormatFlags]::VerticalCenter -bor [System.Windows.Forms.TextFormatFlags]::Left -bor [System.Windows.Forms.TextFormatFlags]::EndEllipsis
+    [System.Windows.Forms.TextRenderer]::DrawText($e.Graphics, [string]$s.Items[$e.Index], $s.Font, $r, $text, $flags)
+}
+foreach ($c in @($cmbMode, $cmbLang, $cmbTheme)) {
+    $c.DrawMode = [System.Windows.Forms.DrawMode]::OwnerDrawFixed
+    $c.ItemHeight = 17
+    $c.Add_DrawItem($comboDraw)
+}
+
 # =====================================================================
 # Events
 # =====================================================================
@@ -1458,7 +1797,10 @@ $btnBrowse.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
     $dlg.Description = T 'browseDesc'
     if (Test-Path -LiteralPath $txtFolder.Text) { $dlg.SelectedPath = $txtFolder.Text }
-    if ($dlg.ShowDialog() -eq 'OK') { $txtFolder.Text = $dlg.SelectedPath }
+    if ($dlg.ShowDialog() -eq 'OK') {
+        $txtFolder.Text = $dlg.SelectedPath
+        Save-LastFolder $dlg.SelectedPath
+    }
 })
 $cmbMode.Add_SelectedIndexChanged({ Update-ModeControls })
 $cmbLang.Add_SelectedIndexChanged({
@@ -1470,6 +1812,43 @@ $cmbLang.Add_SelectedIndexChanged({
         Set-Content -LiteralPath $settingsFile -Value $script:curLang -ErrorAction Stop
     } catch { }
 })
+$cmbTheme.Add_SelectedIndexChanged({
+    if ($script:fillingTheme -or $cmbTheme.SelectedIndex -lt 0) { return }
+    $script:theme = $ThemeCodes[$cmbTheme.SelectedIndex]
+    Apply-Theme
+    try {
+        if (-not (Test-Path -LiteralPath $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null }
+        Set-Content -LiteralPath $themeFile -Value $script:theme -ErrorAction Stop
+    } catch { }
+})
+# In dark mode the column headers are drawn here, rows and check boxes are drawn by Windows
+$list.Add_DrawColumnHeader({
+    param($s, $e)
+    if (-not $script:isDark) { $e.DrawDefault = $true; return }
+    $b = $e.Bounds
+    $bgBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(50, 50, 53))
+    $e.Graphics.FillRectangle($bgBrush, $b)
+    $bgBrush.Dispose()
+    $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(80, 80, 84))
+    $e.Graphics.DrawLine($pen, $b.Right - 1, $b.Top + 3, $b.Right - 1, $b.Bottom - 4)
+    $e.Graphics.DrawLine($pen, $b.Left, $b.Bottom - 1, $b.Right, $b.Bottom - 1)
+    $pen.Dispose()
+    $r = New-Object System.Drawing.Rectangle(($b.X + 6), $b.Y, [Math]::Max(0, $b.Width - 8), $b.Height)
+    $flags = [System.Windows.Forms.TextFormatFlags]::VerticalCenter -bor [System.Windows.Forms.TextFormatFlags]::EndEllipsis -bor [System.Windows.Forms.TextFormatFlags]::Left
+    [System.Windows.Forms.TextRenderer]::DrawText($e.Graphics, $e.Header.Text, $list.Font, $r, [System.Drawing.Color]::FromArgb(232, 232, 232), $flags)
+})
+$list.Add_DrawItem({ param($s, $e) $e.DrawDefault = $true })
+$list.Add_DrawSubItem({ param($s, $e) $e.DrawDefault = $true })
+# Follow Windows when the user switches between light and dark while ModSweep is open
+$script:lastSystemDark = Get-SystemDark
+$themeTimer = New-Object System.Windows.Forms.Timer
+$themeTimer.Interval = 3000
+$themeTimer.Add_Tick({
+    if ($script:theme -ne 'system') { return }
+    $now = Get-SystemDark
+    if ($now -ne $script:lastSystemDark) { $script:lastSystemDark = $now; Apply-Theme }
+})
+$themeTimer.Start()
 $btnScan.Add_Click({ Start-Scan })
 $btnExplorer.Add_Click({ Show-InExplorer })
 $list.Add_DoubleClick({ Show-InExplorer })
@@ -1494,11 +1873,15 @@ $list.Add_ColumnClick({
 })
 $btnAuto.Add_Click({ Set-AutoMark })
 $btnAll.Add_Click({ Set-AllMark })
-$btnClear.Add_Click({ foreach ($it in $list.Items) { $it.Checked = $false } })
+$btnClear.Add_Click({
+    foreach ($it in $list.Items) { $it.Checked = $false }
+    $status.Text = (T 'allMarked') -f 0
+})
 $btnDelete.Add_Click({ Remove-Checked })
 $btnSave.Add_Click({ Save-Report })
 $btnMove.Add_Click({ Move-Checked })
 $btnCache.Add_Click({ Clear-SimsCache })
+$btnBackup.Add_Click({ Backup-Mods })
 $btnUpdate.Add_Click({
     # Scarlet's Mod List shows which mods are broken or updated after a patch
     $updMenu.Show($btnUpdate, (New-Object System.Drawing.Point(0, $btnUpdate.Height)))
@@ -1511,10 +1894,13 @@ $miNsfw.Add_Click({
     Start-Process 'https://scarletsrealm.com/the-mod-list-sfw-nsfw-edition/'
     $status.Text = T 'updateOpened'
 })
-$form.Add_Resize({ Update-TopLayout; Update-BottomLayout })
-$form.Add_Shown({ Update-TopLayout; Update-BottomLayout })
+$form.Add_Resize({ Update-TopLayout; Update-BottomLayout; Update-ListColumns })
+$form.Add_Shown({ Update-TopLayout; Update-BottomLayout; Update-ListColumns })
+$list.Add_ColumnWidthChanged({ param($s, $e) if ($e.ColumnIndex -lt 3) { Update-ListColumns } })
+$list.Add_ClientSizeChanged({ Update-ListColumns })
 
 $btnAuto.Enabled = $false
 $btnMove.Enabled = $false
 $cmbLang.SelectedIndex = [Array]::IndexOf($LangCodes, $script:curLang)   # also calls Apply-Language
+Apply-Theme
 [void]$form.ShowDialog()
