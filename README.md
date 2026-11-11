@@ -75,7 +75,10 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 * For duplicates and versions, ModSweep never lets you delete every file of a group.
 * Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scans of version 1.1.0: *(coming soon)*
+VirusTotal scans of version 1.1.0, no security vendor flagged either file:
+
+* Windows ZIP: **0 of 56** ([full report](https://www.virustotal.com/gui/file/757ef761a9e69eb00699a905025d4e0503e53b35df0bae487ff78b9572cc36b3))
+* Mac and Linux ZIP: **0 of 65** ([full report](https://www.virustotal.com/gui/file/f1869cb6dd8c8600dbe1dc81390cb9073b30bae776d61bdad570855b5748526b))
 
 
 ## FAQ
