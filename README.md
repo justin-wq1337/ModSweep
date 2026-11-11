@@ -31,7 +31,7 @@ Everything you delete goes to the **Recycle Bin**, so nothing is lost by acciden
 * **Save list (Excel):** export any result list as a table
 * **Show in Explorer**, sorting by name, folder, size or date
 
-**6 languages:** English, Deutsch, Español, Français, Polski, Português (Brasil)
+**6 languages:** English, German, Spanish, French, Polish and Portuguese (Brazil)
 
 
 ## Download
