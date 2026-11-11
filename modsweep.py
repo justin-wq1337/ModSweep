@@ -22,6 +22,7 @@ import urllib.parse
 import webbrowser
 
 IS_MAC = sys.platform == 'darwin'
+APP_VERSION = '1.0.1'
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 LANG_CODES = ['en', 'de', 'es', 'fr', 'pl', 'pt']
@@ -141,7 +142,9 @@ LANG = json.loads(r'''{
   "updateOpened": "Scarlet's Mod List was opened in your browser. Search for your mod there (Ctrl+F or Cmd+F).",
   "updSfw": "Mod List: SFW only (no adult content)",
   "updNsfw": "Mod List: SFW + NSFW (adult content, 18+)",
-  "trashing": "Working ..."
+  "trashing": "Working ...",
+  "notModsFolder": "This search needs your Mods folder (or a folder inside it). The selected folder is not inside a folder named \"Mods\".",
+  "skippedNotEmpty": " {0} folders were skipped because they are not empty (anymore)."
  },
  "de": {
   "modes": [
@@ -256,7 +259,9 @@ LANG = json.loads(r'''{
   "updateOpened": "Scarlet's Mod List wurde im Browser geöffnet. Dort nach dem Namen deiner Mod suchen (Strg+F oder Cmd+F).",
   "updSfw": "Mod List: nur SFW (ohne Inhalte für Erwachsene)",
   "updNsfw": "Mod List: SFW + NSFW (Inhalte für Erwachsene, ab 18)",
-  "trashing": "Wird bearbeitet ..."
+  "trashing": "Wird bearbeitet ...",
+  "notModsFolder": "Diese Suche braucht deinen Mods-Ordner (oder einen Ordner darin). Der gewählte Ordner liegt nicht in einem Ordner namens \"Mods\".",
+  "skippedNotEmpty": " {0} Ordner wurden übersprungen, weil sie nicht (mehr) leer sind."
  },
  "es": {
   "modes": [
@@ -371,7 +376,9 @@ LANG = json.loads(r'''{
   "updateOpened": "La Mod List de Scarlet se abrió en el navegador. Busca allí el nombre de tu mod (Ctrl+F o Cmd+F).",
   "updSfw": "Mod List: solo SFW (sin contenido para adultos)",
   "updNsfw": "Mod List: SFW + NSFW (contenido para adultos, +18)",
-  "trashing": "Procesando ..."
+  "trashing": "Procesando ...",
+  "notModsFolder": "Esta búsqueda necesita tu carpeta Mods (o una carpeta dentro de ella). La carpeta elegida no está dentro de una carpeta llamada \"Mods\".",
+  "skippedNotEmpty": " Se omitieron {0} carpetas porque (ya) no están vacías."
  },
  "fr": {
   "modes": [
@@ -486,7 +493,9 @@ LANG = json.loads(r'''{
   "updateOpened": "La Mod List de Scarlet a été ouverte dans le navigateur. Cherchez-y le nom de votre mod (Ctrl+F ou Cmd+F).",
   "updSfw": "Mod List : SFW uniquement (sans contenu adulte)",
   "updNsfw": "Mod List : SFW + NSFW (contenu adulte, 18+)",
-  "trashing": "Traitement en cours ..."
+  "trashing": "Traitement en cours ...",
+  "notModsFolder": "Cette recherche nécessite votre dossier Mods (ou un dossier à l'intérieur). Le dossier choisi ne se trouve pas dans un dossier nommé \"Mods\".",
+  "skippedNotEmpty": " {0} dossiers ont été ignorés car ils ne sont pas (ou plus) vides."
  },
  "pl": {
   "modes": [
@@ -601,7 +610,9 @@ LANG = json.loads(r'''{
   "updateOpened": "Mod List od Scarlet otwarto w przeglądarce. Wyszukaj tam nazwę swojego moda (Ctrl+F lub Cmd+F).",
   "updSfw": "Mod List: tylko SFW (bez treści dla dorosłych)",
   "updNsfw": "Mod List: SFW + NSFW (treści dla dorosłych, 18+)",
-  "trashing": "Przetwarzanie ..."
+  "trashing": "Przetwarzanie ...",
+  "notModsFolder": "To wyszukiwanie wymaga folderu Mods (lub folderu wewnątrz niego). Wybrany folder nie znajduje się w folderze o nazwie \"Mods\".",
+  "skippedNotEmpty": " Pominięto folderów: {0}, ponieważ nie są (już) puste."
  },
  "pt": {
   "modes": [
@@ -716,7 +727,9 @@ LANG = json.loads(r'''{
   "updateOpened": "A Mod List da Scarlet foi aberta no navegador. Procure lá o nome do seu mod (Ctrl+F ou Cmd+F).",
   "updSfw": "Mod List: somente SFW (sem conteúdo adulto)",
   "updNsfw": "Mod List: SFW + NSFW (conteúdo adulto, 18+)",
-  "trashing": "Processando ..."
+  "trashing": "Processando ...",
+  "notModsFolder": "Esta pesquisa precisa da sua pasta Mods (ou de uma pasta dentro dela). A pasta escolhida não está dentro de uma pasta chamada \"Mods\".",
+  "skippedNotEmpty": " {0} pastas foram ignoradas porque não estão (mais) vazias."
  }
 }''')
 
@@ -799,7 +812,11 @@ def find_sims_folder(mods_hint=None):
         p = mods_hint.rstrip('/\\')
         if os.path.basename(p).lower() == 'mods':
             parent = os.path.dirname(p)
-            if os.path.isdir(parent):
+            # Only accept it if it really is the Sims 4 folder, not e.g. Minecraft/Mods
+            if os.path.isdir(parent) and (
+                    os.path.basename(parent) in SIMS_FOLDER_NAMES
+                    or os.path.exists(os.path.join(parent, 'localthumbcache.package'))
+                    or os.path.exists(os.path.join(parent, 'Options.ini'))):
                 return parent
     for d in document_folders():
         for n in SIMS_FOLDER_NAMES:
@@ -877,11 +894,19 @@ def make_entry(path, size, mtime, is_folder=False):
 
 
 def collect(root):
-    """Returns (files, dirs). Files are entries, dirs are folder paths."""
-    files, dirs = [], []
-    for current, subdirs, names in os.walk(root, onerror=lambda e: None):
+    """Returns (files, dirs, bad). Files are entries, dirs are folder paths,
+    bad are folders that could not be read or are links (never treated as empty)."""
+    files, dirs, bad = [], [], set()
+
+    def on_error(e):
+        bad.add(getattr(e, 'filename', None) or root)
+
+    for current, subdirs, names in os.walk(root, onerror=on_error):
         # do not follow symbolic links to folders
-        subdirs[:] = [d for d in subdirs if not os.path.islink(os.path.join(current, d))]
+        links = [d for d in subdirs if os.path.islink(os.path.join(current, d))]
+        for d in links:
+            bad.add(os.path.join(current, d))
+        subdirs[:] = [d for d in subdirs if d not in links]
         for d in subdirs:
             dirs.append(os.path.join(current, d))
         for n in names:
@@ -893,7 +918,29 @@ def collect(root):
             if not os.path.isfile(p) or os.path.islink(p):
                 continue
             files.append(make_entry(p, st.st_size, st.st_mtime))
-    return files, dirs
+    return files, dirs, bad
+
+
+def folder_still_empty(path):
+    """True if a folder holds nothing but system leftovers and could be read completely."""
+    if not os.path.isdir(path) or os.path.islink(path):
+        return False
+    files, _dirs, bad = collect(path)
+    if bad:
+        return False
+    return all(is_system_leftover(f['name']) for f in files)
+
+
+def find_mods_base(path):
+    """Returns the folder named Mods that contains path (or path itself), else None."""
+    p = os.path.abspath(path)
+    while True:
+        if os.path.basename(p).lower() == 'mods':
+            return p
+        parent = os.path.dirname(p)
+        if not parent or parent == p:
+            return None
+        p = parent
 
 
 def file_hash(path):
@@ -908,11 +955,12 @@ def file_hash(path):
 # Search (runs without a window, so it can be tested on its own)
 # =====================================================================
 def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
-    """Returns {'groups': [{'header': str, 'items': [entry]}], 'msg': str}."""
+    """Returns {'groups': [{'header': str, 'items': [entry]}], 'msg': str, 'warn': bool}."""
     root = os.path.abspath(root).rstrip(os.sep) or os.sep
     main = T('mainFolder')
     progress(T('collecting'))
-    files, dirs = collect(root)
+    files, dirs, bad = collect(root)
+    warn = False
     if mode != MODE_JUNK:
         # Mac and Windows leftovers like ._name or .DS_Store are not real mods
         files = [f for f in files if not is_system_leftover(f['name'])]
@@ -930,7 +978,8 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
     if mode == MODE_HASH:
         by_size = {}
         for f in files:
-            by_size.setdefault(f['size'], []).append(f)
+            if f['size'] > 0:   # empty files belong to "unneeded files", not duplicates
+                by_size.setdefault(f['size'], []).append(f)
         to_hash = [f for v in by_size.values() if len(v) > 1 for f in v]
         by_hash = {}
         for i, f in enumerate(to_hash, 1):
@@ -1012,10 +1061,8 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
     elif mode == MODE_EMPTY:
         # A folder counts as empty if it holds no files except system leftovers like .DS_Store
         with_files = set()
-        for f in files:
-            if is_system_leftover(f['name']):
-                continue
-            d = f['dir']
+        keep = [f['dir'] for f in files if not is_system_leftover(f['name'])] + list(bad)
+        for d in keep:
             while len(d) > len(root) and d not in with_files:
                 with_files.add(d)
                 d = os.path.dirname(d)
@@ -1044,6 +1091,10 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
 
     elif mode == MODE_DEPTH:
         scripts, packages = [], []
+        # Depth always counts from the folder named Mods
+        base = find_mods_base(root)
+        if not base:
+            return {'groups': [], 'msg': T('notModsFolder'), 'warn': True}
         for f in sorted(files, key=lambda e: e['path'].lower()):
             e = os.path.splitext(f['name'])[1].lower()
             if e == '.ts4script':
@@ -1052,10 +1103,10 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
                 limit = 5
             else:
                 continue
-            if depth_of(f['dir'], root) <= limit:
+            if depth_of(f['dir'], base) <= limit:
                 continue
-            parts = [p for p in os.path.relpath(f['dir'], root).split(os.sep) if p]
-            f['target'] = os.path.join(root, *parts[:limit])
+            parts = [p for p in os.path.relpath(f['dir'], base).split(os.sep) if p]
+            f['target'] = os.path.join(base, *parts[:limit])
             (scripts if e == '.ts4script' else packages).append(f)
         if scripts:
             groups.append({'header': T('depthScript'), 'items': scripts})
@@ -1066,7 +1117,7 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
     else:
         msg = ''
 
-    return {'groups': groups, 'msg': msg}
+    return {'groups': groups, 'msg': msg, 'warn': warn}
 
 
 # =====================================================================
@@ -1102,11 +1153,16 @@ def _freedesktop_trash(path):
     os.makedirs(info_dir, exist_ok=True)
     target = _unique_target(files_dir, os.path.basename(path))
     name = os.path.basename(target)
-    with open(os.path.join(info_dir, name + '.trashinfo'), 'w', encoding='utf-8') as f:
+    info = os.path.join(info_dir, name + '.trashinfo')
+    with open(info, 'w', encoding='utf-8') as f:
         f.write('[Trash Info]\nPath=%s\nDeletionDate=%s\n' % (
             urllib.parse.quote(os.path.abspath(path)),
             datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')))
-    shutil.move(path, target)
+    try:
+        shutil.move(path, target)
+    except OSError:
+        os.remove(info)   # do not leave an orphan entry in the trash
+        raise
     return True
 
 
@@ -1175,6 +1231,7 @@ def sims_is_running():
 def run_gui():
     import tkinter as tk
     from tkinter import ttk, filedialog, messagebox
+    from tkinter import font as tkfont
 
     class App:
         def __init__(self, root):
@@ -1198,9 +1255,11 @@ def run_gui():
             except Exception:
                 pass
 
+            self.bold_font = tkfont.nametofont('TkDefaultFont').copy()
+            self.bold_font.configure(weight='bold')
             style = ttk.Style()
             style.configure('Danger.TButton', foreground='#a01010')
-            style.configure('Bold.TButton', font=('TkDefaultFont', 10, 'bold'))
+            style.configure('Bold.TButton', font=self.bold_font)
 
             # Top area
             top = ttk.Frame(root, padding=(10, 10, 10, 4))
@@ -1236,7 +1295,7 @@ def run_gui():
             self.btn_scan.grid(row=2, column=4, sticky='ew', padx=(8, 0))
 
             # Description of the selected search type, in red so it stands out
-            self.lbl_hint = tk.Label(top, fg='#cd1e2d', font=('TkDefaultFont', 11, 'bold'), anchor='w', justify='left')
+            self.lbl_hint = tk.Label(top, fg='#cd1e2d', font=self.bold_font, anchor='w', justify='left')
             self.lbl_hint.grid(row=3, column=0, columnspan=5, sticky='ew', pady=(6, 0))
 
             # List
@@ -1250,7 +1309,7 @@ def run_gui():
                                  anchor='center' if c == 'mark' else ('e' if c == 'size' else 'w'))
                 if c != 'mark':
                     self.tree.heading(c, command=lambda col=c: self.sort_by(col))
-            self.tree.tag_configure('group', background='#e6edf2', font=('TkDefaultFont', 10, 'bold'))
+            self.tree.tag_configure('group', background='#e6edf2', font=self.bold_font)
             sb = ttk.Scrollbar(mid, orient='vertical', command=self.tree.yview)
             self.tree.configure(yscrollcommand=sb.set)
             self.tree.pack(side='left', fill='both', expand=True)
@@ -1302,7 +1361,7 @@ def run_gui():
 
         def apply_language(self, first=False):
             T = self.T
-            self.root.title(T('title'))
+            self.root.title('%s %s' % (T('title'), APP_VERSION))
             self.lbl_folder.configure(text=T('folder'))
             self.btn_browse.configure(text=T('browse'))
             self.lbl_mode.configure(text=T('mode'))
@@ -1449,6 +1508,14 @@ def run_gui():
 
         # ----- search -----
         def browse(self):
+            if not IS_MAC:
+                # Let Linux users show hidden folders (Steam and Wine live in hidden folders)
+                try:
+                    self.root.tk.call('catch', 'tk_getOpenFile -foo bar')
+                    self.root.tk.call('set', '::tk::dialog::file::showHiddenBtn', '1')
+                    self.root.tk.call('set', '::tk::dialog::file::showHiddenVar', '0')
+                except tk.TclError:
+                    pass
             d = filedialog.askdirectory(parent=self.root, title=self.T('browseDesc'),
                                         initialdir=self.var_folder.get() or os.path.expanduser('~'))
             if d:
@@ -1493,6 +1560,8 @@ def run_gui():
                 self.btn_move.state(['!disabled'] if mode == MODE_DEPTH else ['disabled'])
                 self.render()
                 self.status.configure(text=result['msg'])
+                if result.get('warn'):
+                    self.warn(result['msg'])
 
             self.status.configure(text=self.T('collecting'))
             self.run_background(lambda: run_scan(mode, root_path, sims_only, exts, lang_T, progress), done)
@@ -1556,30 +1625,44 @@ def run_gui():
             # For duplicates and versions at least one file of each group must stay
             if self.last_mode in DUP_MODES:
                 for g in self.groups:
-                    if len(g['iids']) > 1 and all(i in self.checked for i in g['iids']):
+                    if g['iids'] and all(i in self.checked for i in g['iids']):
                         self.warn(self.T('keepOne').format(g['header']))
                         return
             if not self.ask(self.T('confirmDelete').format(len(checked))):
                 return
-            paths = [self.entries[i]['path'] for i in checked]
+            items = [(self.entries[i]['path'], self.entries[i]['is_folder']) for i in checked]
             T = self.T
 
             def progress(done_count, total):
                 self._progress = T('deleting').format(done_count, total)
 
-            def done(moved):
+            def work():
+                # Check folders again right before deleting: something may have been added
+                paths, not_empty = [], 0
+                for path, is_folder in items:
+                    if is_folder and not folder_still_empty(path):
+                        not_empty += 1
+                    else:
+                        paths.append(path)
+                return move_to_trash(paths, progress), len(paths), not_empty
+
+            def done(result):
+                moved, tried, not_empty = result
                 moved = set(moved)
                 self.remove_entries([i for i in checked if self.entries[i]['path'] in moved])
                 msg = self.T('deleted').format(len(moved))
-                failed = len(checked) - len(moved)
-                if failed:
-                    msg += self.T('deleteFailed').format(failed)
+                if tried > len(moved):
+                    msg += self.T('deleteFailed').format(tried - len(moved))
+                if not_empty:
+                    msg += self.T('skippedNotEmpty').format(not_empty)
                 self.status.configure(text=msg)
 
             self.status.configure(text=self.T('trashing'))
-            self.run_background(lambda: move_to_trash(paths, progress), done)
+            self.run_background(work, done)
 
         def move_checked(self):
+            if self.busy:
+                return
             checked = [i for g in self.groups for i in g['iids'] if i in self.checked and self.entries[i].get('target')]
             if not checked:
                 self.info(self.T('moveNone'))
@@ -1620,7 +1703,8 @@ def run_gui():
             root_path = self.var_folder.get().strip()
             try:
                 with open(path, 'w', newline='', encoding='utf-8-sig') as f:
-                    w = csv.writer(f, delimiter=';')
+                    # English Excel expects commas, most other languages semicolons
+                    w = csv.writer(f, delimiter=',' if self.lang == 'en' else ';')
                     w.writerow([T('csvGroup'), T('csvMarked'), T('colName'), T('colFolder'), T('colSize'), T('colDate'), T('csvPath')])
                     for g in self.groups:
                         for i in g['iids']:

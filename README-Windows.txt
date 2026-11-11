@@ -1,7 +1,7 @@
 ﻿=====================================================================
   ModSweep for The Sims 4
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Created by Justinimini
+  Version 1.0.1, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -23,7 +23,9 @@ folder clean. It searches all subfolders and shows you:
   * misplaced mods that are nested too deep for the game to load
 
 Everything you delete goes to the Recycle Bin, so nothing is lost
-by accident.
+by accident. If Windows cannot use the Recycle Bin (for example on a
+network drive), Windows asks you before anything is deleted for good.
+Before an empty folder is deleted, ModSweep checks it again.
 
 
 REQUIREMENTS
@@ -82,7 +84,8 @@ MORE BUTTONS
   Move marked to correct folder
       For the search type "Misplaced mods". Moves .ts4script files
       up to 1 subfolder deep and .package files up to 5 subfolders
-      deep, so Sims 4 loads them again.
+      deep, so Sims 4 loads them again. For this search, choose your
+      Mods folder (or a folder inside it).
 
   Save list (Excel)
       Saves the current list as a table (.csv) that opens in Excel.
@@ -123,8 +126,9 @@ TROUBLESHOOTING
 ***************
 
   Nothing happens after double clicking Start.bat:
-      Right click "ModSweep.ps1", choose "Properties" and tick
-      "Unblock" at the bottom, then click OK and try again.
+      Double click "Start (Troubleshooting).bat". It starts ModSweep
+      with a visible window that shows error messages. Send a
+      screenshot of that window to the creator.
 
   Some files could not be deleted or moved:
       Sims 4 or another program is still using them. Close the game
@@ -170,7 +174,10 @@ und zeigt dir:
     Spiel nicht geladen werden
 
 Alles, was du löschst, landet im Papierkorb. Es geht also nichts
-aus Versehen verloren.
+aus Versehen verloren. Kann Windows den Papierkorb nicht nutzen (zum
+Beispiel bei einem Netzlaufwerk), fragt Windows nach, bevor etwas
+endgültig gelöscht wird. Leere Ordner prüft ModSweep vor dem Löschen
+noch einmal.
 
 
 VORAUSSETZUNGEN
@@ -233,7 +240,8 @@ WEITERE KNÖPFE
       Für die Suchart "Falsch einsortierte Mods". Schiebt
       .ts4script-Dateien auf höchstens 1 Unterordner und
       .package-Dateien auf höchstens 5 Unterordner Tiefe, damit
-      Sims 4 sie wieder lädt.
+      Sims 4 sie wieder lädt. Wähle für diese Suche deinen
+      Mods-Ordner (oder einen Ordner darin).
 
   Liste speichern (Excel)
       Speichert die aktuelle Liste als Tabelle (.csv), die sich mit
@@ -276,9 +284,9 @@ HILFE BEI PROBLEMEN
 *******************
 
   Nach dem Doppelklick auf Start.bat passiert nichts:
-      Rechtsklick auf "ModSweep.ps1", dann "Eigenschaften". Unten
-      den Haken bei "Zulassen" setzen, auf OK klicken und erneut
-      starten.
+      Doppelklick auf "Start (Troubleshooting).bat". Damit startet
+      ModSweep mit einem sichtbaren Fenster, das Fehlermeldungen
+      anzeigt. Schick einen Screenshot davon an den Ersteller.
 
   Einige Dateien konnten nicht gelöscht oder verschoben werden:
       Sims 4 oder ein anderes Programm benutzt sie noch. Schließe

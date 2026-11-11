@@ -6,7 +6,7 @@
 
 Big Mods folders get messy fast. Duplicate downloads, three versions of the same mod, forgotten ZIP files, preview images and script mods sitting one folder too deep. ModSweep finds all of that for you and lets you clean it up with a few clicks.
 
-Everything you delete goes to the **Recycle Bin**, so nothing is lost by accident.
+Everything you delete goes to the **Recycle Bin** (Trash on Mac and Linux), so nothing is lost by accident.
 
 
 ## Features
@@ -25,7 +25,7 @@ Everything you delete goes to the **Recycle Bin**, so nothing is lost by acciden
 **Tools**
 
 * **Mark (keep newest):** marks all duplicates except the newest file of each group
-* **Move to correct folder:** moves misplaced mods up to the deepest allowed level with one click
+* **Move marked to correct folder:** moves misplaced mods up to the deepest allowed level with one click
 * **Clear Sims cache:** deletes localthumbcache.package and the cache folders
 * **Check update status online:** opens Scarlet's Mod List (you choose the SFW or SFW + NSFW edition)
 * **Save list (Excel):** export any result list as a table
@@ -50,13 +50,14 @@ Get the latest version on the **[Releases page](https://github.com/justin-wq1337
 3. Optional: double click **Create Desktop Shortcut.bat** to get a desktop shortcut with the ModSweep logo.
 
 If Windows shows "Windows protected your PC", click **More info** and then **Run anyway**.
+If nothing happens, start **Start (Troubleshooting).bat** to see error messages.
 
 
 ## Installation (Mac and Linux)
 
 Please follow the README.txt inside the Mac and Linux ZIP. In short:
 
-* **Mac:** install Python from python.org, then right click **Start ModSweep (Mac).command** and choose **Open** (only the first time).
+* **Mac:** install Python from python.org. The first time, macOS blocks the starter: on macOS 15 or newer allow it in **System Settings > Privacy & Security > Open Anyway**, on older versions right click **Start ModSweep (Mac).command** and choose **Open**.
 * **Linux:** install Tkinter if needed (e.g. `sudo apt install python3-tk`), then run `./start-modsweep-linux.sh`.
 
 
@@ -64,14 +65,12 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 
 * ModSweep is **open source**. `ModSweep.ps1` (Windows) and `modsweep.py` (Mac and Linux) are plain text, so you can read every line.
 * It does **not** collect or send any data. The only internet access is opening Scarlet's Mod List in your browser when you click that button.
-* Deleted files always go to the **Recycle Bin**.
-* For duplicates, ModSweep never lets you delete every file of a group.
+* Deleted files go to the **Recycle Bin** or Trash. If Windows cannot use the Recycle Bin (for example on a network drive), Windows asks you before anything is deleted for good.
+* Empty folders are checked again right before they are deleted, so nothing that was added in the meantime is lost.
+* For duplicates and versions, ModSweep never lets you delete every file of a group.
 * Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scans of version 1.0.0, no security vendor flagged either file:
-
-* Windows ZIP: **0 of 53** ([full report](https://www.virustotal.com/gui/file/ecb1ffcc2fa6626b2bea114336ad7166f55671f8bb11470a29d7226ab44f36f3))
-* Mac and Linux ZIP: **0 of 63** ([full report](https://www.virustotal.com/gui/file/775764be7727e2ccc53507173eeb739ef089ab9c91d0cac161acafb0fc05dcd3))
+VirusTotal scans of version 1.0.1: *(coming soon)*
 
 
 ## FAQ
@@ -84,6 +83,19 @@ No. There is no common database for Sims 4 mod versions. The "Check update statu
 
 **Does it work on Mac and Linux?**
 Yes, with the Mac and Linux edition. The Mac and Linux edition is new, so please report any problems in the Issues tab.
+
+
+## What's new in 1.0.1
+
+* Safer deleting on Windows: Windows now asks before anything would be deleted permanently (e.g. on network drives)
+* Double clicking a row no longer marks the file by accident (Windows)
+* "Empty folders" never lists folders that could not be read, and every folder is checked again before deleting
+* The "keep at least one file" protection now also works after earlier deletions
+* "Misplaced mods" always counts from your Mods folder and warns if another folder is selected
+* "Clear Sims cache" only works in the real Sims 4 folder
+* The Excel list uses the right separator for your language
+* Empty files no longer show up as duplicates, system leftovers (Thumbs.db, desktop.ini, .DS_Store) are handled the same on all systems
+* New: Start (Troubleshooting).bat for Windows, updated Mac and Linux instructions
 
 
 ## Credits

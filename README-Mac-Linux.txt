@@ -1,7 +1,7 @@
 =====================================================================
   ModSweep for The Sims 4 (Mac and Linux edition)
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Created by Justinimini
+  Version 1.0.1, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -45,9 +45,14 @@ INSTALLATION
      Applications or Documents folder.
      IMPORTANT: Do NOT put it inside your Sims 4 Mods folder.
 
-  3. The first time: RIGHT click "Start ModSweep (Mac).command" and
-     choose "Open", then click "Open" again. macOS asks this once
-     because the file is not from the App Store.
+  3. The first time, macOS blocks the file because it is not from the
+     App Store. How to allow it once:
+     * macOS 15 (Sequoia) or newer: double click
+       "Start ModSweep (Mac).command" and close the warning. Then open
+       System Settings > Privacy & Security, scroll down and click
+       "Open Anyway" next to the message about ModSweep. Confirm.
+     * macOS 14 or older: RIGHT click "Start ModSweep (Mac).command",
+       choose "Open" and click "Open" again.
      After that, a normal double click is enough.
 
   4. A Terminal window opens briefly and ModSweep starts. You can
@@ -92,7 +97,9 @@ WHERE IS MY MODS FOLDER?
   "Browse ..." and choose it yourself. With Steam it is usually here:
     ~/.local/share/Steam/steamapps/compatdata/1222670/pfx/drive_c/
     users/steamuser/Documents/Electronic Arts/The Sims 4/Mods
-  (Hidden folders: press Ctrl+H in the file dialog.)
+  Tip: you can also copy this path and paste it directly into the
+  "Folder" field. In the "Browse ..." dialog, tick "Show Hidden Files
+  and Directories" to see hidden folders like .local.
 
 
 =====================================================================
@@ -117,7 +124,8 @@ WHERE IS MY MODS FOLDER?
 MORE BUTTONS
   Move marked to correct folder
       For "Misplaced mods". Moves .ts4script files up to 1 subfolder
-      deep and .package files up to 5 subfolders deep.
+      deep and .package files up to 5 subfolders deep. For this
+      search, choose your Mods folder (or a folder inside it).
   Save list (Excel)
       Saves the current list as a .csv table (Excel, Numbers,
       LibreOffice).
@@ -160,7 +168,8 @@ Versionen, unnötige Dateien (auch .DS_Store und andere System-Reste),
 leere Ordner, die größten Dateien und Mods, die zu tief liegen und
 deshalb vom Spiel nicht geladen werden.
 
-Alles, was du löschst, landet im Papierkorb.
+Alles, was du löschst, landet im Papierkorb. Leere Ordner prüft
+ModSweep vor dem Löschen noch einmal.
 
 
 =====================================================================
@@ -180,9 +189,16 @@ INSTALLATION
      Programme oder Dokumente.
      WICHTIG: NICHT in den Sims 4 Mods-Ordner legen.
 
-  3. Beim ersten Mal: RECHTSKLICK auf "Start ModSweep (Mac).command",
-     "Öffnen" wählen und noch einmal "Öffnen" klicken. macOS fragt das
-     einmal, weil die Datei nicht aus dem App Store kommt.
+  3. Beim ersten Mal blockiert macOS die Datei, weil sie nicht aus dem
+     App Store kommt. So erlaubst du sie einmalig:
+     * macOS 15 (Sequoia) oder neuer: Doppelklick auf
+       "Start ModSweep (Mac).command" und die Warnung schließen. Dann
+       Systemeinstellungen > Datenschutz & Sicherheit öffnen, nach
+       unten scrollen und neben dem Hinweis zu ModSweep auf
+       "Dennoch öffnen" klicken. Bestätigen.
+     * macOS 14 oder älter: RECHTSKLICK auf
+       "Start ModSweep (Mac).command", "Öffnen" wählen und noch einmal
+       "Öffnen" klicken.
      Danach reicht ein normaler Doppelklick.
 
   4. Kurz öffnet sich ein Terminal-Fenster und ModSweep startet. Das
@@ -230,7 +246,10 @@ WO IST MEIN MODS-ORDNER?
   er meistens hier:
     ~/.local/share/Steam/steamapps/compatdata/1222670/pfx/drive_c/
     users/steamuser/Documents/Electronic Arts/The Sims 4/Mods
-  (Versteckte Ordner: im Auswahlfenster Strg+H drücken.)
+  Tipp: Du kannst diesen Pfad auch kopieren und direkt in das Feld
+  "Ordner" einfügen. Im Fenster "Durchsuchen ..." den Haken bei
+  "Show Hidden Files and Directories" setzen, dann siehst du versteckte Ordner wie
+  .local.
 
 
 =====================================================================
@@ -257,7 +276,8 @@ WEITERE KNÖPFE
   Markierte richtig einsortieren
       Für "Falsch einsortierte Mods". Schiebt .ts4script-Dateien auf
       höchstens 1 Unterordner und .package-Dateien auf höchstens 5
-      Unterordner Tiefe.
+      Unterordner Tiefe. Wähle für diese Suche deinen Mods-Ordner
+      (oder einen Ordner darin).
   Liste speichern (Excel)
       Speichert die Liste als .csv-Tabelle (Excel, Numbers,
       LibreOffice).

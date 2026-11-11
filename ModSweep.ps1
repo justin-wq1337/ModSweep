@@ -13,7 +13,37 @@ if (-not ('ModEntry' -as [type])) {
     Add-Type -ReferencedAssemblies 'System.Windows.Forms', 'System.Drawing' -TypeDefinition @'
 using System;
 using System.Collections;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+
+public static class Recycler {
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct SHFILEOPSTRUCT {
+        public IntPtr hwnd;
+        [MarshalAs(UnmanagedType.U4)] public int wFunc;
+        public string pFrom;
+        public string pTo;
+        public short fFlags;
+        [MarshalAs(UnmanagedType.Bool)] public bool fAnyOperationsAborted;
+        public IntPtr hNameMappings;
+        public string lpszProgressTitle;
+    }
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SHFileOperation(ref SHFILEOPSTRUCT op);
+
+    // Moves a file or folder to the Recycle Bin.
+    // FOF_WANTNUKEWARNING: Windows asks first if the item cannot go to the Recycle Bin
+    // and would be deleted permanently (e.g. network drives), instead of deleting silently.
+    public static bool Send(string path) {
+        SHFILEOPSTRUCT op = new SHFILEOPSTRUCT();
+        op.wFunc = 3;                       // FO_DELETE
+        op.pFrom = path + "\0\0";
+        op.fFlags = (short)(0x0040 | 0x0010 | 0x0004 | 0x0400 | 0x4000);
+        // ALLOWUNDO | NOCONFIRMATION | SILENT | NOERRORUI | WANTNUKEWARNING
+        int r = SHFileOperation(ref op);
+        return r == 0 && !op.fAnyOperationsAborted;
+    }
+}
 
 public class ModEntry {
     public string Path;
@@ -93,7 +123,7 @@ $Lang['en'] = @{
     typeNone = 'No files of type {0} found.'
     typeFound = '{0} files of type {1} found in {2} folders, {3} in total.'
     junkEmpty = 'Empty files (0 bytes)'; junkArchive = 'Archives (.zip, .rar, .7z)'; junkText = 'Texts and readmes'
-    junkImage = 'Images and previews'; junkWin = 'Windows leftovers (Thumbs.db)'
+    junkImage = 'Images and previews'; junkWin = 'System leftovers (Thumbs.db, desktop.ini, .DS_Store)'
     junkNone = 'No unneeded files found.'
     junkFound = '{0} unneeded files found, {1} in total. Only delete archives if they are already extracted.'
     emptyGroup = 'Empty folders  ({0})'
@@ -135,6 +165,8 @@ $Lang['en'] = @{
     browseDesc = 'Choose a folder, e.g. your Sims 4 Mods folder'
     updateOpened = 'Scarlet''s Mod List was opened in your browser. Search for your mod there (Ctrl+F).'
     updSfw = 'Mod List: SFW only (no adult content)'; updNsfw = 'Mod List: SFW + NSFW (adult content, 18+)'
+    notModsFolder = 'This search needs your Mods folder (or a folder inside it). The selected folder is not inside a folder named "Mods".'
+    skippedNotEmpty = ' {0} folders were skipped because they are not empty (anymore).'
 }
 
 $Lang['de'] = @{
@@ -178,7 +210,7 @@ $Lang['de'] = @{
     typeNone = 'Keine Dateien vom Typ {0} gefunden.'
     typeFound = '{0} Dateien vom Typ {1} in {2} Ordnern gefunden, zusammen {3}.'
     junkEmpty = 'Leere Dateien (0 Byte)'; junkArchive = 'Archive (.zip, .rar, .7z)'; junkText = 'Texte und Anleitungen'
-    junkImage = 'Bilder und Vorschaubilder'; junkWin = 'Windows-Reste (Thumbs.db)'
+    junkImage = 'Bilder und Vorschaubilder'; junkWin = 'System-Reste (Thumbs.db, desktop.ini, .DS_Store)'
     junkNone = 'Keine unnötigen Dateien gefunden.'
     junkFound = '{0} unnötige Dateien gefunden, zusammen {1}. Archive nur löschen, wenn sie schon entpackt sind.'
     emptyGroup = 'Leere Ordner  ({0})'
@@ -220,6 +252,8 @@ $Lang['de'] = @{
     browseDesc = 'Ordner auswählen, z. B. deinen Sims 4 Mods-Ordner'
     updateOpened = 'Scarlet''s Mod List wurde im Browser geöffnet. Dort nach dem Namen deiner Mod suchen (Strg+F).'
     updSfw = 'Mod List: nur SFW (ohne Inhalte für Erwachsene)'; updNsfw = 'Mod List: SFW + NSFW (Inhalte für Erwachsene, ab 18)'
+    notModsFolder = 'Diese Suche braucht deinen Mods-Ordner (oder einen Ordner darin). Der gewählte Ordner liegt nicht in einem Ordner namens "Mods".'
+    skippedNotEmpty = ' {0} Ordner wurden übersprungen, weil sie nicht (mehr) leer sind.'
 }
 
 $Lang['es'] = @{
@@ -263,7 +297,7 @@ $Lang['es'] = @{
     typeNone = 'No se encontraron archivos del tipo {0}.'
     typeFound = '{0} archivos del tipo {1} encontrados en {2} carpetas, {3} en total.'
     junkEmpty = 'Archivos vacíos (0 bytes)'; junkArchive = 'Comprimidos (.zip, .rar, .7z)'; junkText = 'Textos y léeme'
-    junkImage = 'Imágenes y vistas previas'; junkWin = 'Restos de Windows (Thumbs.db)'
+    junkImage = 'Imágenes y vistas previas'; junkWin = 'Restos del sistema (Thumbs.db, desktop.ini, .DS_Store)'
     junkNone = 'No se encontraron archivos innecesarios.'
     junkFound = '{0} archivos innecesarios encontrados, {1} en total. Borra los comprimidos solo si ya están descomprimidos.'
     emptyGroup = 'Carpetas vacías  ({0})'
@@ -305,6 +339,8 @@ $Lang['es'] = @{
     browseDesc = 'Elige una carpeta, p. ej. tu carpeta Mods de Los Sims 4'
     updateOpened = 'La Mod List de Scarlet se abrió en el navegador. Busca allí el nombre de tu mod (Ctrl+F).'
     updSfw = 'Mod List: solo SFW (sin contenido para adultos)'; updNsfw = 'Mod List: SFW + NSFW (contenido para adultos, +18)'
+    notModsFolder = 'Esta búsqueda necesita tu carpeta Mods (o una carpeta dentro de ella). La carpeta elegida no está dentro de una carpeta llamada "Mods".'
+    skippedNotEmpty = ' Se omitieron {0} carpetas porque (ya) no están vacías.'
 }
 
 $Lang['fr'] = @{
@@ -348,7 +384,7 @@ $Lang['fr'] = @{
     typeNone = 'Aucun fichier de type {0} trouvé.'
     typeFound = '{0} fichiers de type {1} trouvés dans {2} dossiers, {3} au total.'
     junkEmpty = 'Fichiers vides (0 octet)'; junkArchive = 'Archives (.zip, .rar, .7z)'; junkText = 'Textes et readme'
-    junkImage = 'Images et aperçus'; junkWin = 'Restes de Windows (Thumbs.db)'
+    junkImage = 'Images et aperçus'; junkWin = 'Restes du système (Thumbs.db, desktop.ini, .DS_Store)'
     junkNone = 'Aucun fichier inutile trouvé.'
     junkFound = '{0} fichiers inutiles trouvés, {1} au total. Ne supprimez les archives que si elles sont déjà extraites.'
     emptyGroup = 'Dossiers vides  ({0})'
@@ -390,6 +426,8 @@ $Lang['fr'] = @{
     browseDesc = 'Choisissez un dossier, par ex. votre dossier Mods de Sims 4'
     updateOpened = 'La Mod List de Scarlet a été ouverte dans le navigateur. Cherchez-y le nom de votre mod (Ctrl+F).'
     updSfw = 'Mod List : SFW uniquement (sans contenu adulte)'; updNsfw = 'Mod List : SFW + NSFW (contenu adulte, 18+)'
+    notModsFolder = 'Cette recherche nécessite votre dossier Mods (ou un dossier à l''intérieur). Le dossier choisi ne se trouve pas dans un dossier nommé "Mods".'
+    skippedNotEmpty = ' {0} dossiers ont été ignorés car ils ne sont pas (ou plus) vides.'
 }
 
 $Lang['pl'] = @{
@@ -433,7 +471,7 @@ $Lang['pl'] = @{
     typeNone = 'Nie znaleziono plików typu {0}.'
     typeFound = 'Znaleziono plików typu {1}: {0} w folderach: {2}, łącznie {3}.'
     junkEmpty = 'Puste pliki (0 bajtów)'; junkArchive = 'Archiwa (.zip, .rar, .7z)'; junkText = 'Teksty i instrukcje'
-    junkImage = 'Obrazy i podglądy'; junkWin = 'Pozostałości Windows (Thumbs.db)'
+    junkImage = 'Obrazy i podglądy'; junkWin = 'Pozostałości systemu (Thumbs.db, desktop.ini, .DS_Store)'
     junkNone = 'Nie znaleziono zbędnych plików.'
     junkFound = 'Znaleziono zbędnych plików: {0}, łącznie {1}. Usuwaj archiwa tylko wtedy, gdy są już rozpakowane.'
     emptyGroup = 'Puste foldery  ({0})'
@@ -475,6 +513,8 @@ $Lang['pl'] = @{
     browseDesc = 'Wybierz folder, np. folder Mods gry The Sims 4'
     updateOpened = 'Mod List od Scarlet otwarto w przeglądarce. Wyszukaj tam nazwę swojego moda (Ctrl+F).'
     updSfw = 'Mod List: tylko SFW (bez treści dla dorosłych)'; updNsfw = 'Mod List: SFW + NSFW (treści dla dorosłych, 18+)'
+    notModsFolder = 'To wyszukiwanie wymaga folderu Mods (lub folderu wewnątrz niego). Wybrany folder nie znajduje się w folderze o nazwie "Mods".'
+    skippedNotEmpty = ' Pominięto folderów: {0}, ponieważ nie są (już) puste.'
 }
 
 $Lang['pt'] = @{
@@ -518,7 +558,7 @@ $Lang['pt'] = @{
     typeNone = 'Nenhum arquivo do tipo {0} encontrado.'
     typeFound = '{0} arquivos do tipo {1} encontrados em {2} pastas, {3} no total.'
     junkEmpty = 'Arquivos vazios (0 bytes)'; junkArchive = 'Compactados (.zip, .rar, .7z)'; junkText = 'Textos e leia-me'
-    junkImage = 'Imagens e prévias'; junkWin = 'Restos do Windows (Thumbs.db)'
+    junkImage = 'Imagens e prévias'; junkWin = 'Restos do sistema (Thumbs.db, desktop.ini, .DS_Store)'
     junkNone = 'Nenhum arquivo desnecessário encontrado.'
     junkFound = '{0} arquivos desnecessários encontrados, {1} no total. Só exclua compactados que já foram extraídos.'
     emptyGroup = 'Pastas vazias  ({0})'
@@ -560,6 +600,8 @@ $Lang['pt'] = @{
     browseDesc = 'Escolha uma pasta, ex. sua pasta Mods do The Sims 4'
     updateOpened = 'A Mod List da Scarlet foi aberta no navegador. Procure lá o nome do seu mod (Ctrl+F).'
     updSfw = 'Mod List: somente SFW (sem conteúdo adulto)'; updNsfw = 'Mod List: SFW + NSFW (conteúdo adulto, 18+)'
+    notModsFolder = 'Esta pesquisa precisa da sua pasta Mods (ou de uma pasta dentro dela). A pasta escolhida não está dentro de uma pasta chamada "Mods".'
+    skippedNotEmpty = ' {0} pastas foram ignoradas porque não estão (mais) vazias.'
 }
 
 # Remember the chosen language between starts
@@ -590,6 +632,7 @@ function Ask-YesNo([string]$text, [string]$titleKey = 'tConfirm') {
 # =====================================================================
 # Helpers
 # =====================================================================
+$AppVersion = '1.0.1'
 $script:lastMode = -1
 $script:sorter = New-Object ModSorter
 
@@ -611,7 +654,13 @@ function Find-SimsFolder {
     $p = $txtFolder.Text.Trim().TrimEnd('\')
     if ($p -and (Split-Path $p -Leaf) -ieq 'Mods') {
         $parent = Split-Path $p -Parent
-        if (Test-Path -LiteralPath $parent) { return $parent }
+        # Only accept it if it really is the Sims 4 folder, not e.g. Minecraft\Mods
+        if ($parent -and (Test-Path -LiteralPath $parent) -and (
+                ($simsFolderNames -contains (Split-Path $parent -Leaf)) -or
+                (Test-Path -LiteralPath (Join-Path $parent 'localthumbcache.package')) -or
+                (Test-Path -LiteralPath (Join-Path $parent 'Options.ini')))) {
+            return $parent
+        }
     }
     $docs = [Environment]::GetFolderPath('MyDocuments')
     foreach ($n in $simsFolderNames) {
@@ -659,6 +708,56 @@ function Get-VersionKey($f) {
     $b = $f.BaseName.ToLowerInvariant()
     $s = [regex]::Replace($b, $versionRegex, '')
     return $s.Trim(' ', '_', '-', '.')
+}
+
+function Test-Leftover([string]$name) {
+    $low = $name.ToLowerInvariant()
+    return ($low -eq 'thumbs.db' -or $low -eq 'desktop.ini' -or $low -eq '.ds_store' -or $name.StartsWith('._'))
+}
+
+# Walks a folder tree. Skips junctions and symbolic links and remembers folders
+# that could not be read, so they are never mistaken for empty folders.
+function Get-Tree([string]$root) {
+    $files = New-Object System.Collections.Generic.List[System.IO.FileInfo]
+    $dirs = New-Object System.Collections.Generic.List[System.IO.DirectoryInfo]
+    $bad = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+    $stack = New-Object System.Collections.Generic.Stack[System.IO.DirectoryInfo]
+    $stack.Push((New-Object System.IO.DirectoryInfo($root)))
+    while ($stack.Count -gt 0) {
+        $d = $stack.Pop()
+        try { $entries = $d.GetFileSystemInfos() } catch { [void]$bad.Add($d.FullName); continue }
+        foreach ($en in $entries) {
+            if ($en -is [System.IO.DirectoryInfo]) {
+                if ($en.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { [void]$bad.Add($en.FullName); continue }
+                $dirs.Add($en)
+                $stack.Push($en)
+            } else {
+                $files.Add($en)
+            }
+        }
+    }
+    return @{ Files = $files.ToArray(); Dirs = $dirs.ToArray(); Bad = $bad }
+}
+
+# True if a folder still holds nothing but system leftovers and could be read completely
+function Test-FolderStillEmpty([string]$path) {
+    if (-not (Test-Path -LiteralPath $path -PathType Container)) { return $false }
+    $t = Get-Tree $path
+    if ($t.Bad.Count -gt 0) { return $false }
+    foreach ($f in $t.Files) { if (-not (Test-Leftover $f.Name)) { return $false } }
+    return $true
+}
+
+# Finds the folder named "Mods" that contains $path (or $path itself)
+function Find-ModsBase([string]$path) {
+    $p = $path
+    while ($p) {
+        if ((Split-Path $p -Leaf) -ieq 'Mods') { return $p }
+        $parent = Split-Path $p -Parent
+        if (-not $parent -or $parent -eq $p) { break }
+        $p = $parent
+    }
+    return $null
 }
 
 # =====================================================================
@@ -884,7 +983,7 @@ function Update-ModeControls {
 }
 
 function Apply-Language {
-    $form.Text = T 'title'
+    $form.Text = "$(T 'title') $AppVersion"
     $lblFolder.Text = T 'folder'
     $btnBrowse.Text = T 'browse'
     $lblMode.Text = T 'mode'
@@ -986,12 +1085,18 @@ function Start-Scan {
     $list.Items.Clear()
     $list.Groups.Clear()
     $btnScan.Enabled = $false
+    $flow.Enabled = $false
     $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
     $status.Text = T 'collecting'
     Update-Ui
 
     try {
-        $files = @(Get-ChildItem -LiteralPath $root -Recurse -File -Force -ErrorAction SilentlyContinue)
+        $tree = Get-Tree $root
+        $files = @($tree.Files)
+        if ($mode -ne $MODE_JUNK) {
+            # System leftovers like Thumbs.db or ._name are not real mods
+            $files = @($files | Where-Object { -not (Test-Leftover $_.Name) })
+        }
         $simsOnly = $chkSims.Checked -and ($mode -in @($MODE_HASH, $MODE_NAME, $MODE_VERSION, $MODE_BIG))
         if ($simsOnly) {
             $files = @($files | Where-Object { $_.Extension -in @('.package', '.ts4script') })
@@ -1004,7 +1109,7 @@ function Start-Scan {
             0 {  # same content
                 # Only files of equal size can be identical, this saves a lot of time
                 $toHash = New-Object System.Collections.Generic.List[object]
-                foreach ($g in ($files | Group-Object Length)) {
+                foreach ($g in ($files | Where-Object { $_.Length -gt 0 } | Group-Object Length)) {
                     if ($g.Count -gt 1) { foreach ($f in $g.Group) { $toHash.Add($f) } }
                 }
                 $byHash = @{}
@@ -1088,8 +1193,8 @@ function Start-Scan {
                 $images = @('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')
                 foreach ($f in $files) {
                     $e = $f.Extension.ToLowerInvariant()
-                    if ($f.Length -eq 0) { $cats['junkEmpty'].Add($f) }
-                    elseif ($f.Name -ieq 'thumbs.db') { $cats['junkWin'].Add($f) }
+                    if (Test-Leftover $f.Name) { $cats['junkWin'].Add($f) }
+                    elseif ($f.Length -eq 0) { $cats['junkEmpty'].Add($f) }
                     elseif ($archive -contains $e) { $cats['junkArchive'].Add($f) }
                     elseif ($texts -contains $e) { $cats['junkText'].Add($f) }
                     elseif ($images -contains $e) { $cats['junkImage'].Add($f) }
@@ -1109,10 +1214,13 @@ function Start-Scan {
             }
 
             5 {  # empty folders
-                $dirs = @(Get-ChildItem -LiteralPath $root -Recurse -Directory -Force -ErrorAction SilentlyContinue)
+                $dirs = @($tree.Dirs)
                 $withFiles = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
-                foreach ($f in $files) {
-                    $d = $f.DirectoryName
+                # Folders with real files, and folders that could not be read completely, are never empty
+                $keep = New-Object System.Collections.Generic.List[string]
+                foreach ($f in $files) { $keep.Add($f.DirectoryName) }
+                foreach ($b in $tree.Bad) { $keep.Add($b) }
+                foreach ($d in $keep) {
                     while ($d -and $d.Length -gt $root.Length -and $withFiles.Add($d)) {
                         $d = Split-Path $d -Parent
                     }
@@ -1141,15 +1249,22 @@ function Start-Scan {
             7 {  # nested too deep
                 $lvgScript = $null; $lvgPkg = $null
                 $count = 0
+                # Depth always counts from the folder named "Mods"
+                $base = Find-ModsBase $root
+                if (-not $base) {
+                    $msg = T 'notModsFolder'
+                    Show-Msg $msg 'tWarn' 'Warning'
+                    break
+                }
                 foreach ($f in ($files | Sort-Object FullName)) {
                     $e = $f.Extension.ToLowerInvariant()
                     if ($e -eq '.ts4script') { $max = 1 }
                     elseif ($e -eq '.package') { $max = 5 }
                     else { continue }
-                    $depth = Get-Depth $f.DirectoryName $root
+                    $depth = Get-Depth $f.DirectoryName $base
                     if ($depth -le $max) { continue }
-                    $parts = $f.DirectoryName.Substring($root.Length).Trim('\') -split '\\'
-                    $target = $root
+                    $parts = $f.DirectoryName.Substring($base.Length).Trim('\') -split '\\'
+                    $target = $base
                     for ($k = 0; $k -lt $max; $k++) { $target = Join-Path $target $parts[$k] }
                     if ($e -eq '.ts4script') {
                         if (-not $lvgScript) { $lvgScript = New-Group (T 'depthScript') }
@@ -1167,14 +1282,15 @@ function Start-Scan {
             }
         }
 
-        $list.EndUpdate()
         $script:lastMode = $mode
         $btnAuto.Enabled = ($mode -in @($MODE_HASH, $MODE_NAME, $MODE_VERSION))
         $btnMove.Enabled = ($mode -eq $MODE_DEPTH)
         $status.Text = $msg
     }
     finally {
+        $list.EndUpdate()
         $btnScan.Enabled = $true
+        $flow.Enabled = $true
         $form.Cursor = [System.Windows.Forms.Cursors]::Default
     }
 }
@@ -1216,7 +1332,7 @@ function Remove-Checked {
     # For duplicates and versions at least one file of each group must stay
     if ($script:lastMode -in @($MODE_HASH, $MODE_NAME, $MODE_VERSION)) {
         foreach ($grp in $list.Groups) {
-            if ($grp.Items.Count -gt 1) {
+            if ($grp.Items.Count -gt 0) {
                 $all = $true
                 foreach ($it in $grp.Items) { if (-not $it.Checked) { $all = $false; break } }
                 if ($all) {
@@ -1229,27 +1345,36 @@ function Remove-Checked {
     if (-not (Ask-YesNo ((T 'confirmDelete') -f $checked.Count))) { return }
 
     $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+    $flow.Enabled = $false
+    $btnScan.Enabled = $false
     $list.BeginUpdate()
-    $ok = 0; $fail = 0
-    foreach ($it in $checked) {
-        try {
-            if ($it.Tag.IsFolder) {
-                [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($it.Tag.Path, 'OnlyErrorDialogs', 'SendToRecycleBin')
-            } else {
-                [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($it.Tag.Path, 'OnlyErrorDialogs', 'SendToRecycleBin')
+    $ok = 0; $fail = 0; $notEmpty = 0
+    try {
+        foreach ($it in $checked) {
+            $path = $it.Tag.Path
+            # Check folders again right before deleting: something may have been added
+            if ($it.Tag.IsFolder -and -not (Test-FolderStillEmpty $path)) { $notEmpty++; continue }
+            $null = [Recycler]::Send($path)
+            if (Test-Path -LiteralPath $path) { $fail++ }
+            else {
+                $list.Items.Remove($it)
+                $ok++
             }
-            $list.Items.Remove($it)
-            $ok++
-        } catch { $fail++ }
-        if (($ok + $fail) % 25 -eq 0) {
-            $status.Text = (T 'deleting') -f ($ok + $fail), $checked.Count
-            Update-Ui
+            if (($ok + $fail) % 25 -eq 0) {
+                $status.Text = (T 'deleting') -f ($ok + $fail), $checked.Count
+                Update-Ui
+            }
         }
     }
-    $list.EndUpdate()
-    $form.Cursor = [System.Windows.Forms.Cursors]::Default
+    finally {
+        $list.EndUpdate()
+        $flow.Enabled = $true
+        $btnScan.Enabled = $true
+        $form.Cursor = [System.Windows.Forms.Cursors]::Default
+    }
     $msg = (T 'deleted') -f $ok
     if ($fail -gt 0) { $msg += (T 'deleteFailed') -f $fail }
+    if ($notEmpty -gt 0) { $msg += (T 'skippedNotEmpty') -f $notEmpty }
     $status.Text = $msg
 }
 
@@ -1262,7 +1387,7 @@ function Move-Checked {
         $dest = Join-Path $it.Tag.Target (Split-Path $it.Tag.Path -Leaf)
         if (Test-Path -LiteralPath $dest) { $skip++; continue }
         try {
-            Move-Item -LiteralPath $it.Tag.Path -Destination $dest -ErrorAction Stop
+            [System.IO.File]::Move($it.Tag.Path, $dest)
             $list.Items.Remove($it)
             $ok++
         } catch { $skip++ }
@@ -1291,7 +1416,7 @@ function Save-Report {
         [pscustomobject]$o
     }
     try {
-        $rows | Export-Csv -LiteralPath $dlg.FileName -Delimiter ';' -NoTypeInformation -Encoding UTF8
+        $rows | Export-Csv -LiteralPath $dlg.FileName -UseCulture -NoTypeInformation -Encoding UTF8
         $status.Text = (T 'saved') -f $dlg.FileName
     } catch {
         Show-Msg ((T 'saveFailed') -f $_.Exception.Message) 'tError' 'Error'
@@ -1311,17 +1436,15 @@ function Clear-SimsCache {
     foreach ($sub in @('cache', 'cachestr', 'onlinethumbnailcache')) {
         $p = Join-Path $sims $sub
         if (Test-Path -LiteralPath $p) {
-            foreach ($f in (Get-ChildItem -LiteralPath $p -File -Recurse -Force -ErrorAction SilentlyContinue)) { $targets.Add($f.FullName) }
+            foreach ($f in (Get-Tree $p).Files) { $targets.Add($f.FullName) }
         }
     }
     if ($targets.Count -eq 0) { $status.Text = T 'cacheEmpty'; return }
     if (-not (Ask-YesNo ((T 'cacheConfirm') -f $sims, $targets.Count, "`n") 'cacheTitle')) { return }
     $ok = 0; $fail = 0
     foreach ($t in $targets) {
-        try {
-            [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($t, 'OnlyErrorDialogs', 'SendToRecycleBin')
-            $ok++
-        } catch { $fail++ }
+        $null = [Recycler]::Send($t)
+        if (Test-Path -LiteralPath $t) { $fail++ } else { $ok++ }
     }
     $msg = (T 'cacheDone') -f $ok
     if ($fail -gt 0) { $msg += (T 'cacheFail') -f $fail }
@@ -1350,6 +1473,13 @@ $cmbLang.Add_SelectedIndexChanged({
 $btnScan.Add_Click({ Start-Scan })
 $btnExplorer.Add_Click({ Show-InExplorer })
 $list.Add_DoubleClick({ Show-InExplorer })
+# A double click in a ListView with check boxes would also toggle the box. Prevent that.
+$script:dblClickTime = [DateTime]::MinValue
+$list.Add_MouseDown({ param($s, $e) if ($e.Clicks -gt 1) { $script:dblClickTime = [DateTime]::Now } })
+$list.Add_ItemCheck({
+    param($s, $e)
+    if (([DateTime]::Now - $script:dblClickTime).TotalMilliseconds -lt 400) { $e.NewValue = $e.CurrentValue }
+})
 $list.Add_ColumnClick({
     param($s, $e)
     if ($script:sorter.Column -eq $e.Column) {
@@ -1381,7 +1511,7 @@ $miNsfw.Add_Click({
     Start-Process 'https://scarletsrealm.com/the-mod-list-sfw-nsfw-edition/'
     $status.Text = T 'updateOpened'
 })
-$form.Add_Resize({ Update-BottomLayout })
+$form.Add_Resize({ Update-TopLayout; Update-BottomLayout })
 $form.Add_Shown({ Update-TopLayout; Update-BottomLayout })
 
 $btnAuto.Enabled = $false
