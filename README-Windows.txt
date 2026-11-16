@@ -1,7 +1,7 @@
 ﻿=====================================================================
   ModSweep for The Sims 4
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Version 1.1.0, created by Justinimini
+  Version 1.2.0, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -21,6 +21,9 @@ folder clean. It searches all subfolders and shows you:
   * empty folders
   * the largest files
   * misplaced mods that are nested too deep for the game to load
+  * broken or wrong mod files (damaged downloads, files for Sims 2
+    or Sims 3)
+  * the game's error reports (lastException files)
 
 Everything you delete goes to the Recycle Bin, so nothing is lost
 by accident. If Windows cannot use the Recycle Bin (for example on a
@@ -74,8 +77,10 @@ HOW TO USE
        * Click a column header (e.g. Size or Modified) to sort.
 
   5. Mark the files you want to remove:
-       * "Mark (keep newest)" marks all duplicates except the newest
-         file of each group.
+       * "Mark (keep newest)" marks all duplicates except one file
+         of each group. It keeps the newest file (for "Several
+         versions" the highest version) and prefers files the game
+         can load.
        * "Mark all" marks everything in the list.
 
   6. Click "Move marked to Recycle Bin".
@@ -87,7 +92,8 @@ MORE BUTTONS
   Move marked to correct folder
       For the search type "Misplaced mods". Moves .ts4script files
       up to 1 subfolder deep and .package files up to 5 subfolders
-      deep, so Sims 4 loads them again. For this search, choose your
+      deep, so Sims 4 loads them again. Script mods take their
+      settings files (.cfg) with them. For this search, choose your
       Mods folder (or a folder inside it).
 
   Save list (Excel)
@@ -117,6 +123,7 @@ LANGUAGES
 
 Choose your language in the list at the top right:
 English, Deutsch, Español, Français, Polski, Português (Brasil).
+On the first start ModSweep uses your Windows language.
 ModSweep remembers your choice.
 
 
@@ -192,6 +199,9 @@ und zeigt dir:
   * die größten Dateien
   * falsch einsortierte Mods, die zu tief liegen und deshalb vom
     Spiel nicht geladen werden
+  * defekte oder falsche Mod-Dateien (beschädigte Downloads,
+    Dateien für Sims 2 oder Sims 3)
+  * die Fehlerberichte des Spiels (lastException-Dateien)
 
 Alles, was du löschst, landet im Papierkorb. Es geht also nichts
 aus Versehen verloren. Kann Windows den Papierkorb nicht nutzen (zum
@@ -250,7 +260,9 @@ SO BENUTZT DU MODSWEEP
 
   5. Dateien markieren, die weg sollen:
        * "Markieren (neueste behalten)" markiert alle Duplikate
-         außer der neuesten Datei jeder Gruppe.
+         außer einer Datei jeder Gruppe. Behalten wird die neueste
+         Datei (bei "Mehrere Versionen" die höchste Version), und
+         Dateien, die das Spiel laden kann, haben Vorrang.
        * "Alle markieren" markiert alles in der Liste.
 
   6. Klick auf "Markierte in den Papierkorb".
@@ -263,7 +275,8 @@ WEITERE KNÖPFE
       Für die Suchart "Falsch einsortierte Mods". Schiebt
       .ts4script-Dateien auf höchstens 1 Unterordner und
       .package-Dateien auf höchstens 5 Unterordner Tiefe, damit
-      Sims 4 sie wieder lädt. Wähle für diese Suche deinen
+      Sims 4 sie wieder lädt. Skript-Mods nehmen ihre
+      Einstellungsdateien (.cfg) mit. Wähle für diese Suche deinen
       Mods-Ordner (oder einen Ordner darin).
 
   Liste speichern (Excel)
@@ -295,6 +308,7 @@ SPRACHEN
 
 Die Sprache wählst du oben rechts in der Liste:
 English, Deutsch, Español, Français, Polski, Português (Brasil).
+Beim ersten Start nimmt ModSweep die Sprache von Windows.
 ModSweep merkt sich deine Auswahl.
 
 

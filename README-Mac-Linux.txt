@@ -1,7 +1,7 @@
 =====================================================================
   ModSweep for The Sims 4 (Mac and Linux edition)
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Version 1.1.0, created by Justinimini
+  Version 1.2.0, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -23,6 +23,9 @@ clean. It searches all subfolders and shows you:
   * empty folders
   * the largest files
   * misplaced mods that are nested too deep for the game to load
+  * broken or wrong mod files (damaged downloads, files for Sims 2
+    or Sims 3)
+  * the game's error reports (lastException files)
 
 Everything you delete goes to the Trash, so nothing is lost by
 accident.
@@ -117,8 +120,10 @@ WHERE IS MY MODS FOLDER?
   4. Mark files: click the box in the first column. Clicking the box
      of a group row marks or unmarks the whole group.
      The space bar also works.
-  5. "Mark (keep newest)" marks all duplicates except the newest
-     file of each group. "Mark all" marks everything.
+  5. "Mark (keep newest)" marks all duplicates except one file of
+     each group. It keeps the newest file (for "Several versions"
+     the highest version) and prefers files the game can load.
+     "Mark all" marks everything.
   6. Click "Move marked to Trash".
 
   Double click a row to show the file in its folder.
@@ -127,8 +132,9 @@ WHERE IS MY MODS FOLDER?
 MORE BUTTONS
   Move marked to correct folder
       For "Misplaced mods". Moves .ts4script files up to 1 subfolder
-      deep and .package files up to 5 subfolders deep. For this
-      search, choose your Mods folder (or a folder inside it).
+      deep and .package files up to 5 subfolders deep. Script mods
+      take their settings files (.cfg) with them. For this search,
+      choose your Mods folder (or a folder inside it).
   Save list (Excel)
       Saves the current list as a .csv table (Excel, Numbers,
       LibreOffice).
@@ -146,7 +152,8 @@ MORE BUTTONS
 
 LANGUAGES
   English, Deutsch, Español, Français, Polski, Português (Brasil).
-  Choose at the top right. ModSweep remembers your choice.
+  Choose at the top right. On the first start ModSweep uses your
+  system language. ModSweep remembers your choice.
 
 LIGHT AND DARK MODE
   At the bottom right: Theme: System (follows macOS or your Linux
@@ -178,8 +185,10 @@ WAS IST MODSWEEP?
 ModSweep ist ein kleines Programm, mit dem du deinen Sims 4
 Mods-Ordner aufräumen kannst. Es findet doppelte Mods, alte
 Versionen, unnötige Dateien (auch .DS_Store und andere System-Reste),
-leere Ordner, die größten Dateien und Mods, die zu tief liegen und
-deshalb vom Spiel nicht geladen werden.
+leere Ordner, die größten Dateien, Mods, die zu tief liegen und
+deshalb vom Spiel nicht geladen werden, defekte oder falsche
+Mod-Dateien (z. B. für Sims 2 oder Sims 3) und die Fehlerberichte
+des Spiels.
 
 Alles, was du löschst, landet im Papierkorb. Leere Ordner prüft
 ModSweep vor dem Löschen noch einmal.
@@ -280,8 +289,10 @@ WO IST MEIN MODS-ORDNER?
   4. Dateien markieren: auf das Kästchen in der ersten Spalte klicken.
      Ein Klick auf das Kästchen einer Gruppenzeile markiert die ganze
      Gruppe oder hebt die Markierung auf. Die Leertaste geht auch.
-  5. "Markieren (neueste behalten)" markiert alle Duplikate außer der
-     neuesten Datei jeder Gruppe. "Alle markieren" markiert alles.
+  5. "Markieren (neueste behalten)" markiert alle Duplikate außer einer
+     Datei jeder Gruppe. Behalten wird die neueste Datei (bei "Mehrere
+     Versionen" die höchste Version), und Dateien, die das Spiel laden
+     kann, haben Vorrang. "Alle markieren" markiert alles.
   6. Klick auf "Markierte in den Papierkorb".
 
   Doppelklick auf eine Zeile zeigt die Datei in ihrem Ordner.
@@ -292,7 +303,8 @@ WEITERE KNÖPFE
   Markierte richtig einsortieren
       Für "Falsch einsortierte Mods". Schiebt .ts4script-Dateien auf
       höchstens 1 Unterordner und .package-Dateien auf höchstens 5
-      Unterordner Tiefe. Wähle für diese Suche deinen Mods-Ordner
+      Unterordner Tiefe. Skript-Mods nehmen ihre Einstellungsdateien
+      (.cfg) mit. Wähle für diese Suche deinen Mods-Ordner
       (oder einen Ordner darin).
   Liste speichern (Excel)
       Speichert die Liste als .csv-Tabelle (Excel, Numbers,
@@ -312,7 +324,8 @@ WEITERE KNÖPFE
 
 SPRACHEN
   English, Deutsch, Español, Français, Polski, Português (Brasil).
-  Oben rechts auswählen. ModSweep merkt sich deine Auswahl.
+  Oben rechts auswählen. Beim ersten Start nimmt ModSweep die
+  Systemsprache. ModSweep merkt sich deine Auswahl.
 
 HELLER UND DUNKLER MODUS
   Unten rechts: Design: System (folgt macOS bzw. deinem

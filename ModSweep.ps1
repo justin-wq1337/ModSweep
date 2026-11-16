@@ -75,14 +75,54 @@ public static class Recycler {
     // Moves a file or folder to the Recycle Bin.
     // FOF_WANTNUKEWARNING: Windows asks first if the item cannot go to the Recycle Bin
     // and would be deleted permanently (e.g. network drives), instead of deleting silently.
-    public static bool Send(string path) {
+    public static bool Send(string path) { return Send(path, IntPtr.Zero); }
+
+    // owner: ModSweep's window, so a Windows question about permanent deletion
+    // opens in front of ModSweep and not hidden behind it.
+    public static bool Send(string path, IntPtr owner) {
         SHFILEOPSTRUCT op = new SHFILEOPSTRUCT();
+        op.hwnd = owner;
         op.wFunc = 3;                       // FO_DELETE
         op.pFrom = path + "\0\0";
         op.fFlags = (short)(0x0040 | 0x0010 | 0x0004 | 0x0400 | 0x4000);
         // ALLOWUNDO | NOCONFIRMATION | SILENT | NOERRORUI | WANTNUKEWARNING
         int r = SHFileOperation(ref op);
         return r == 0 && !op.fAnyOperationsAborted;
+    }
+}
+
+// Tells real links (junctions, symbolic links) apart from other reparse points.
+// OneDrive marks every synced folder as a reparse point, but those are normal
+// folders and must be searched. Only real links are skipped.
+public static class LinkInfo {
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct WIN32_FIND_DATA {
+        public uint dwFileAttributes;
+        public System.Runtime.InteropServices.ComTypes.FILETIME ftCreationTime;
+        public System.Runtime.InteropServices.ComTypes.FILETIME ftLastAccessTime;
+        public System.Runtime.InteropServices.ComTypes.FILETIME ftLastWriteTime;
+        public uint nFileSizeHigh;
+        public uint nFileSizeLow;
+        public uint dwReserved0;
+        public uint dwReserved1;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string cFileName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)] public string cAlternateFileName;
+    }
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr FindFirstFileW(string lpFileName, out WIN32_FIND_DATA data);
+    [DllImport("kernel32.dll")]
+    private static extern bool FindClose(IntPtr h);
+
+    // true  = junction or symbolic link (skip it)
+    // true  = could not be checked (skip it and report it, to be safe)
+    // false = normal folder, including OneDrive and other cloud folders
+    public static bool IsRealLink(string path) {
+        WIN32_FIND_DATA d;
+        IntPtr h = FindFirstFileW(path, out d);
+        if (h == new IntPtr(-1)) { return true; }
+        FindClose(h);
+        if ((d.dwFileAttributes & 0x400) == 0) { return false; }
+        return d.dwReserved0 == 0xA0000003u || d.dwReserved0 == 0xA000000Cu;
     }
 }
 
@@ -139,7 +179,9 @@ $Lang['en'] = @{
         'Unneeded files (archives, readmes, images, 0 bytes)',
         'Empty folders',
         'Largest files',
-        'Misplaced mods (nested too deep)')
+        'Misplaced mods (nested too deep)',
+        'Broken or wrong mod files (damaged, Sims 2/3)',
+        'Game error reports (lastException)')
     hints = @(
         'Finds files with exactly the same content, even if they have different names.',
         'Finds files with the same name in different folders. The content may differ.',
@@ -148,7 +190,9 @@ $Lang['en'] = @{
         'Shows archives, readmes, preview images and empty files. Sims 4 does not need them.',
         'Shows folders that no longer contain a single file.',
         'Shows the 200 largest files, so you can see what takes up the most space.',
-        'Sims 4 loads .ts4script only 1 subfolder deep and .package up to 5 subfolders deep.')
+        'Sims 4 loads .ts4script only 1 subfolder deep and .package up to 5 subfolders deep.',
+        'Finds damaged .package and .ts4script files and files for Sims 2 or 3. They do not work in Sims 4.',
+        'Shows the error reports of the game (lastException). Delete old ones after fixing your mods.')
     mainFolder = '(main folder)'; folderItem = 'Folder'
     folderNotFound = 'The folder was not found.'
     enterType = 'Please enter a file type, e.g. .png'
@@ -179,7 +223,7 @@ $Lang['en'] = @{
     depthFound = '{0} files are nested too deep and are not loaded by the game. Mark them and click "{1}".'
     explorerEmpty = 'The list is still empty. Please click "{0}" first.'
     explorerSelect = 'Please click a row in the list first.'
-    autoMarked = '{0} files marked. The newest file of each group is kept.'
+    autoMarked = '{0} files marked. The newest file of each group is kept, files the game can load come first.'
     allMarked = '{0} entries marked.'
     nothingMarked = 'Nothing is marked.'
     keepOne = 'Everything in "{0}" is marked. At least one file should stay.'
@@ -217,6 +261,18 @@ $Lang['en'] = @{
     themeSystem = 'Theme: System'; themeLight = 'Theme: Light'; themeDark = 'Theme: Dark'
     notModsFolder = 'This search needs your Mods folder (or a folder inside it). The selected folder is not inside a folder named "Mods".'
     skippedNotEmpty = ' {0} folders were skipped because they are not empty (anymore).'
+    skippedFolders = ' {0} folders were skipped because they could not be read (link, no access or path too long).'
+    autoMarkedVer = '{0} files marked. The highest version of each group is kept. Please check the groups before deleting: similar names can be different mods.'
+    scanError = 'The search was stopped because of an error: {0}'
+    brokenPkg = 'Damaged .package files (not a valid Sims 4 package)'
+    oldGame = 'Files for Sims 2 or Sims 3 (do not work in Sims 4)'
+    brokenScript = 'Damaged script mods (.ts4script is not a valid ZIP)'
+    brokenNone = 'No broken or wrong mod files found ({0} files checked).'
+    brokenFound = '{0} broken or wrong mod files found. They do not work in the game and can be deleted.'
+    checking = 'Checking files: {0} of {1} ...'
+    errGroup = 'Error reports in {0}  ({1} files)'
+    errNone = 'No error reports found in {0}.'
+    errFound = '{0} error reports found. Open one in a text editor to see which mod is mentioned.'
 }
 
 $Lang['de'] = @{
@@ -235,7 +291,9 @@ $Lang['de'] = @{
         'Unnötige Dateien (Archive, Readmes, Bilder, 0 Byte)',
         'Leere Ordner',
         'Größte Dateien',
-        'Falsch einsortierte Mods (zu tief verschachtelt)')
+        'Falsch einsortierte Mods (zu tief verschachtelt)',
+        'Defekte oder falsche Mod-Dateien (beschädigt, Sims 2/3)',
+        'Fehlerberichte des Spiels (lastException)')
     hints = @(
         'Findet Dateien mit exakt gleichem Inhalt, auch wenn sie anders heißen.',
         'Findet Dateien mit gleichem Namen in verschiedenen Ordnern. Der Inhalt kann abweichen.',
@@ -244,7 +302,9 @@ $Lang['de'] = @{
         'Zeigt Archive, Anleitungen, Vorschaubilder und leere Dateien. Sims 4 braucht diese nicht.',
         'Zeigt Ordner, in denen keine einzige Datei mehr liegt.',
         'Zeigt die 200 größten Dateien. So siehst du, was am meisten Platz belegt.',
-        'Sims 4 lädt .ts4script nur bis 1 Unterordner tief und .package bis 5 Unterordner tief.')
+        'Sims 4 lädt .ts4script nur bis 1 Unterordner tief und .package bis 5 Unterordner tief.',
+        'Findet beschädigte .package- und .ts4script-Dateien und Dateien für Sims 2 oder 3. Sie laufen nicht in Sims 4.',
+        'Zeigt die Fehlerberichte des Spiels (lastException). Alte Berichte nach der Reparatur löschen.')
     mainFolder = '(Hauptordner)'; folderItem = 'Ordner'
     folderNotFound = 'Der Ordner wurde nicht gefunden.'
     enterType = 'Bitte einen Dateityp eintragen, z. B. .png'
@@ -275,7 +335,7 @@ $Lang['de'] = @{
     depthFound = '{0} Dateien liegen zu tief und werden vom Spiel nicht geladen. Markieren und auf "{1}" klicken.'
     explorerEmpty = 'Die Liste ist noch leer. Bitte zuerst auf "{0}" klicken.'
     explorerSelect = 'Bitte zuerst eine Zeile in der Liste anklicken.'
-    autoMarked = '{0} Dateien markiert. Die neueste Datei jeder Gruppe bleibt erhalten.'
+    autoMarked = '{0} Dateien markiert. Die neueste Datei jeder Gruppe bleibt erhalten, Dateien, die das Spiel laden kann, haben Vorrang.'
     allMarked = '{0} Einträge markiert.'
     nothingMarked = 'Es ist nichts markiert.'
     keepOne = 'In "{0}" ist alles markiert. Mindestens eine Datei sollte bleiben.'
@@ -313,6 +373,18 @@ $Lang['de'] = @{
     themeSystem = 'Design: System'; themeLight = 'Design: Hell'; themeDark = 'Design: Dunkel'
     notModsFolder = 'Diese Suche braucht deinen Mods-Ordner (oder einen Ordner darin). Der gewählte Ordner liegt nicht in einem Ordner namens "Mods".'
     skippedNotEmpty = ' {0} Ordner wurden übersprungen, weil sie nicht (mehr) leer sind.'
+    skippedFolders = ' {0} Ordner wurden übersprungen, weil sie nicht gelesen werden konnten (Verknüpfung, kein Zugriff oder Pfad zu lang).'
+    autoMarkedVer = '{0} Dateien markiert. Die höchste Version jeder Gruppe bleibt erhalten. Bitte prüfe die Gruppen vor dem Löschen: Ähnliche Namen können verschiedene Mods sein.'
+    scanError = 'Die Suche wurde wegen eines Fehlers abgebrochen: {0}'
+    brokenPkg = 'Beschädigte .package-Dateien (kein gültiges Sims-4-Paket)'
+    oldGame = 'Dateien für Sims 2 oder Sims 3 (funktionieren nicht in Sims 4)'
+    brokenScript = 'Beschädigte Skript-Mods (.ts4script ist kein gültiges ZIP)'
+    brokenNone = 'Keine defekten oder falschen Mod-Dateien gefunden ({0} Dateien geprüft).'
+    brokenFound = '{0} defekte oder falsche Mod-Dateien gefunden. Sie funktionieren im Spiel nicht und können gelöscht werden.'
+    checking = 'Prüfe Dateien: {0} von {1} ...'
+    errGroup = 'Fehlerberichte in {0}  ({1} Dateien)'
+    errNone = 'Keine Fehlerberichte gefunden in {0}.'
+    errFound = '{0} Fehlerberichte gefunden. Öffne einen in einem Texteditor, um zu sehen, welcher Mod genannt wird.'
 }
 
 $Lang['es'] = @{
@@ -331,7 +403,9 @@ $Lang['es'] = @{
         'Archivos innecesarios (comprimidos, léeme, imágenes, 0 bytes)',
         'Carpetas vacías',
         'Archivos más grandes',
-        'Mods mal colocados (demasiado profundos)')
+        'Mods mal colocados (demasiado profundos)',
+        'Archivos de mods dañados o incorrectos (dañados, Los Sims 2/3)',
+        'Informes de error del juego (lastException)')
     hints = @(
         'Encuentra archivos con exactamente el mismo contenido, aunque tengan otro nombre.',
         'Encuentra archivos con el mismo nombre en distintas carpetas. El contenido puede ser diferente.',
@@ -340,7 +414,9 @@ $Lang['es'] = @{
         'Muestra comprimidos, léeme, imágenes de vista previa y archivos vacíos. Los Sims 4 no los necesita.',
         'Muestra carpetas que ya no contienen ningún archivo.',
         'Muestra los 200 archivos más grandes para ver qué ocupa más espacio.',
-        'Los Sims 4 carga .ts4script como máximo a 1 subcarpeta y .package como máximo a 5 subcarpetas.')
+        'Los Sims 4 carga .ts4script como máximo a 1 subcarpeta y .package como máximo a 5 subcarpetas.',
+        'Busca .package y .ts4script dañados y archivos de Los Sims 2 o 3. No funcionan en Los Sims 4.',
+        'Muestra los informes de error del juego (lastException). Borra los antiguos tras arreglar tus mods.')
     mainFolder = '(carpeta principal)'; folderItem = 'Carpeta'
     folderNotFound = 'No se encontró la carpeta.'
     enterType = 'Introduce un tipo de archivo, p. ej. .png'
@@ -371,7 +447,7 @@ $Lang['es'] = @{
     depthFound = '{0} archivos están demasiado profundos y el juego no los carga. Márcalos y haz clic en "{1}".'
     explorerEmpty = 'La lista está vacía. Haz clic primero en "{0}".'
     explorerSelect = 'Haz clic primero en una fila de la lista.'
-    autoMarked = '{0} archivos marcados. Se conserva el archivo más nuevo de cada grupo.'
+    autoMarked = '{0} archivos marcados. Se conserva el archivo más nuevo de cada grupo; primero los que el juego puede cargar.'
     allMarked = '{0} elementos marcados.'
     nothingMarked = 'No hay nada marcado.'
     keepOne = 'En "{0}" está todo marcado. Debe quedar al menos un archivo.'
@@ -409,6 +485,18 @@ $Lang['es'] = @{
     themeSystem = 'Tema: Sistema'; themeLight = 'Tema: Claro'; themeDark = 'Tema: Oscuro'
     notModsFolder = 'Esta búsqueda necesita tu carpeta Mods (o una carpeta dentro de ella). La carpeta elegida no está dentro de una carpeta llamada "Mods".'
     skippedNotEmpty = ' Se omitieron {0} carpetas porque (ya) no están vacías.'
+    skippedFolders = ' Se omitieron {0} carpetas porque no se pudieron leer (enlace, sin acceso o ruta demasiado larga).'
+    autoMarkedVer = '{0} archivos marcados. Se conserva la versión más alta de cada grupo. Revisa los grupos antes de borrar: nombres parecidos pueden ser mods distintos.'
+    scanError = 'La búsqueda se detuvo por un error: {0}'
+    brokenPkg = 'Archivos .package dañados (no son un paquete válido de Los Sims 4)'
+    oldGame = 'Archivos de Los Sims 2 o Los Sims 3 (no funcionan en Los Sims 4)'
+    brokenScript = 'Mods de script dañados (el .ts4script no es un ZIP válido)'
+    brokenNone = 'No se encontraron archivos de mods dañados o incorrectos ({0} archivos revisados).'
+    brokenFound = 'Se encontraron {0} archivos de mods dañados o incorrectos. No funcionan en el juego y se pueden borrar.'
+    checking = 'Revisando archivos: {0} de {1} ...'
+    errGroup = 'Informes de error en {0}  ({1} archivos)'
+    errNone = 'No se encontraron informes de error en {0}.'
+    errFound = 'Se encontraron {0} informes de error. Abre uno con un editor de texto para ver qué mod aparece.'
 }
 
 $Lang['fr'] = @{
@@ -427,7 +515,9 @@ $Lang['fr'] = @{
         'Fichiers inutiles (archives, readme, images, 0 octet)',
         'Dossiers vides',
         'Fichiers les plus volumineux',
-        'Mods mal rangés (trop profonds)')
+        'Mods mal rangés (trop profonds)',
+        'Fichiers de mods abîmés ou incorrects (abîmés, Sims 2/3)',
+        'Rapports d''erreur du jeu (lastException)')
     hints = @(
         'Trouve les fichiers au contenu identique, même s''ils portent un autre nom.',
         'Trouve les fichiers portant le même nom dans différents dossiers. Le contenu peut différer.',
@@ -436,7 +526,9 @@ $Lang['fr'] = @{
         'Affiche les archives, readme, images d''aperçu et fichiers vides. Sims 4 n''en a pas besoin.',
         'Affiche les dossiers qui ne contiennent plus aucun fichier.',
         'Affiche les 200 plus gros fichiers pour voir ce qui prend le plus de place.',
-        'Sims 4 charge les .ts4script à 1 sous-dossier maximum et les .package à 5 sous-dossiers maximum.')
+        'Sims 4 charge les .ts4script à 1 sous-dossier maximum et les .package à 5 sous-dossiers maximum.',
+        'Trouve les .package et .ts4script abîmés et les fichiers pour Les Sims 2 ou 3. Ils ne marchent pas.',
+        'Affiche les rapports d''erreur du jeu (lastException). Supprime les anciens après réparation.')
     mainFolder = '(dossier principal)'; folderItem = 'Dossier'
     folderNotFound = 'Le dossier est introuvable.'
     enterType = 'Veuillez saisir un type de fichier, par ex. .png'
@@ -467,7 +559,7 @@ $Lang['fr'] = @{
     depthFound = '{0} fichiers sont trop profonds et ne sont pas chargés par le jeu. Cochez-les et cliquez sur "{1}".'
     explorerEmpty = 'La liste est vide. Cliquez d''abord sur "{0}".'
     explorerSelect = 'Cliquez d''abord sur une ligne de la liste.'
-    autoMarked = '{0} fichiers cochés. Le fichier le plus récent de chaque groupe est conservé.'
+    autoMarked = '{0} fichiers cochés. Le fichier le plus récent de chaque groupe est conservé, en priorité ceux que le jeu peut charger.'
     allMarked = '{0} éléments cochés.'
     nothingMarked = 'Rien n''est coché.'
     keepOne = 'Tout est coché dans "{0}". Au moins un fichier doit rester.'
@@ -505,6 +597,18 @@ $Lang['fr'] = @{
     themeSystem = 'Thème : Système'; themeLight = 'Thème : Clair'; themeDark = 'Thème : Sombre'
     notModsFolder = 'Cette recherche nécessite votre dossier Mods (ou un dossier à l''intérieur). Le dossier choisi ne se trouve pas dans un dossier nommé "Mods".'
     skippedNotEmpty = ' {0} dossiers ont été ignorés car ils ne sont pas (ou plus) vides.'
+    skippedFolders = ' {0} dossiers ont été ignorés car ils n''ont pas pu être lus (lien, accès refusé ou chemin trop long).'
+    autoMarkedVer = '{0} fichiers cochés. La version la plus haute de chaque groupe est conservée. Vérifie les groupes avant de supprimer : des noms proches peuvent être des mods différents.'
+    scanError = 'La recherche a été arrêtée à cause d''une erreur : {0}'
+    brokenPkg = 'Fichiers .package abîmés (pas un package Sims 4 valide)'
+    oldGame = 'Fichiers pour Les Sims 2 ou Les Sims 3 (ne fonctionnent pas dans Les Sims 4)'
+    brokenScript = 'Mods de script abîmés (le .ts4script n''est pas un ZIP valide)'
+    brokenNone = 'Aucun fichier de mod abîmé ou incorrect trouvé ({0} fichiers vérifiés).'
+    brokenFound = '{0} fichiers de mods abîmés ou incorrects trouvés. Ils ne fonctionnent pas dans le jeu et peuvent être supprimés.'
+    checking = 'Vérification des fichiers : {0} sur {1} ...'
+    errGroup = 'Rapports d''erreur dans {0}  ({1} fichiers)'
+    errNone = 'Aucun rapport d''erreur trouvé dans {0}.'
+    errFound = '{0} rapports d''erreur trouvés. Ouvre-en un avec un éditeur de texte pour voir quel mod est cité.'
 }
 
 $Lang['pl'] = @{
@@ -523,7 +627,9 @@ $Lang['pl'] = @{
         'Zbędne pliki (archiwa, readme, obrazy, 0 bajtów)',
         'Puste foldery',
         'Największe pliki',
-        'Źle umieszczone mody (zbyt głęboko)')
+        'Źle umieszczone mody (zbyt głęboko)',
+        'Uszkodzone lub niewłaściwe pliki modów (uszkodzone, Simsy 2/3)',
+        'Raporty błędów gry (lastException)')
     hints = @(
         'Znajduje pliki o identycznej zawartości, nawet jeśli mają inne nazwy.',
         'Znajduje pliki o tej samej nazwie w różnych folderach. Zawartość może się różnić.',
@@ -532,7 +638,9 @@ $Lang['pl'] = @{
         'Pokazuje archiwa, pliki readme, obrazy podglądu i puste pliki. The Sims 4 ich nie potrzebuje.',
         'Pokazuje foldery, w których nie ma już żadnego pliku.',
         'Pokazuje 200 największych plików, aby było widać, co zajmuje najwięcej miejsca.',
-        'The Sims 4 wczytuje pliki .ts4script najwyżej 1 podfolder w głąb, a pliki .package najwyżej 5.')
+        'The Sims 4 wczytuje pliki .ts4script najwyżej 1 podfolder w głąb, a pliki .package najwyżej 5.',
+        'Znajduje uszkodzone pliki .package i .ts4script oraz pliki do Simsów 2 lub 3. Nie działają w Simsach 4.',
+        'Pokazuje raporty błędów gry (lastException). Stare raporty usuń po naprawieniu modów.')
     mainFolder = '(folder główny)'; folderItem = 'Folder'
     folderNotFound = 'Nie znaleziono folderu.'
     enterType = 'Wpisz typ pliku, np. .png'
@@ -563,7 +671,7 @@ $Lang['pl'] = @{
     depthFound = 'Plików leżących za głęboko: {0}. Gra ich nie wczytuje. Zaznacz je i kliknij "{1}".'
     explorerEmpty = 'Lista jest pusta. Najpierw kliknij "{0}".'
     explorerSelect = 'Najpierw kliknij wiersz na liście.'
-    autoMarked = 'Zaznaczono plików: {0}. Najnowszy plik z każdej grupy zostaje.'
+    autoMarked = 'Zaznaczono plików: {0}. Najnowszy plik z każdej grupy zostaje, pierwszeństwo mają pliki, które gra może wczytać.'
     allMarked = 'Zaznaczono elementów: {0}.'
     nothingMarked = 'Nic nie jest zaznaczone.'
     keepOne = 'W "{0}" zaznaczono wszystko. Przynajmniej jeden plik powinien zostać.'
@@ -601,6 +709,18 @@ $Lang['pl'] = @{
     themeSystem = 'Motyw: systemowy'; themeLight = 'Motyw: jasny'; themeDark = 'Motyw: ciemny'
     notModsFolder = 'To wyszukiwanie wymaga folderu Mods (lub folderu wewnątrz niego). Wybrany folder nie znajduje się w folderze o nazwie "Mods".'
     skippedNotEmpty = ' Pominięto folderów: {0}, ponieważ nie są (już) puste.'
+    skippedFolders = ' Pominięto folderów: {0}, ponieważ nie można ich odczytać (skrót, brak dostępu lub zbyt długa ścieżka).'
+    autoMarkedVer = 'Zaznaczono plików: {0}. Najwyższa wersja z każdej grupy zostaje. Sprawdź grupy przed usunięciem: podobne nazwy mogą oznaczać różne mody.'
+    scanError = 'Wyszukiwanie zostało przerwane z powodu błędu: {0}'
+    brokenPkg = 'Uszkodzone pliki .package (to nie jest prawidłowa paczka Simsów 4)'
+    oldGame = 'Pliki do Simsów 2 lub Simsów 3 (nie działają w Simsach 4)'
+    brokenScript = 'Uszkodzone mody skryptowe (.ts4script nie jest prawidłowym plikiem ZIP)'
+    brokenNone = 'Nie znaleziono uszkodzonych ani niewłaściwych plików modów (sprawdzono plików: {0}).'
+    brokenFound = 'Znaleziono uszkodzone lub niewłaściwe pliki modów: {0}. Nie działają w grze i można je usunąć.'
+    checking = 'Sprawdzanie plików: {0} z {1} ...'
+    errGroup = 'Raporty błędów w {0}  (plików: {1})'
+    errNone = 'Nie znaleziono raportów błędów w {0}.'
+    errFound = 'Znaleziono raporty błędów: {0}. Otwórz jeden w edytorze tekstu, aby zobaczyć, który mod jest w nim wymieniony.'
 }
 
 $Lang['pt'] = @{
@@ -619,7 +739,9 @@ $Lang['pt'] = @{
         'Arquivos desnecessários (compactados, leia-me, imagens, 0 bytes)',
         'Pastas vazias',
         'Maiores arquivos',
-        'Mods no lugar errado (muito profundos)')
+        'Mods no lugar errado (muito profundos)',
+        'Arquivos de mods danificados ou errados (danificados, The Sims 2/3)',
+        'Relatórios de erro do jogo (lastException)')
     hints = @(
         'Encontra arquivos com exatamente o mesmo conteúdo, mesmo com nomes diferentes.',
         'Encontra arquivos com o mesmo nome em pastas diferentes. O conteúdo pode ser diferente.',
@@ -628,7 +750,9 @@ $Lang['pt'] = @{
         'Mostra compactados, leia-me, imagens de prévia e arquivos vazios. O The Sims 4 não precisa deles.',
         'Mostra pastas que não contêm mais nenhum arquivo.',
         'Mostra os 200 maiores arquivos para você ver o que ocupa mais espaço.',
-        'O The Sims 4 carrega .ts4script no máximo 1 subpasta abaixo e .package no máximo 5 subpastas abaixo.')
+        'O The Sims 4 carrega .ts4script no máximo 1 subpasta abaixo e .package no máximo 5 subpastas abaixo.',
+        'Encontra .package e .ts4script danificados e arquivos do The Sims 2 ou 3. Não funcionam no The Sims 4.',
+        'Mostra os relatórios de erro do jogo (lastException). Exclua os antigos após consertar seus mods.')
     mainFolder = '(pasta principal)'; folderItem = 'Pasta'
     folderNotFound = 'A pasta não foi encontrada.'
     enterType = 'Informe um tipo de arquivo, ex. .png'
@@ -659,7 +783,7 @@ $Lang['pt'] = @{
     depthFound = '{0} arquivos estão fundo demais e não são carregados pelo jogo. Marque-os e clique em "{1}".'
     explorerEmpty = 'A lista está vazia. Clique primeiro em "{0}".'
     explorerSelect = 'Clique primeiro em uma linha da lista.'
-    autoMarked = '{0} arquivos marcados. O arquivo mais novo de cada grupo é mantido.'
+    autoMarked = '{0} arquivos marcados. O arquivo mais novo de cada grupo é mantido, com prioridade para os que o jogo consegue carregar.'
     allMarked = '{0} itens marcados.'
     nothingMarked = 'Nada está marcado.'
     keepOne = 'Tudo está marcado em "{0}". Pelo menos um arquivo deve ficar.'
@@ -697,6 +821,18 @@ $Lang['pt'] = @{
     themeSystem = 'Tema: Sistema'; themeLight = 'Tema: Claro'; themeDark = 'Tema: Escuro'
     notModsFolder = 'Esta pesquisa precisa da sua pasta Mods (ou de uma pasta dentro dela). A pasta escolhida não está dentro de uma pasta chamada "Mods".'
     skippedNotEmpty = ' {0} pastas foram ignoradas porque não estão (mais) vazias.'
+    skippedFolders = ' {0} pastas foram ignoradas porque não puderam ser lidas (atalho, sem acesso ou caminho longo demais).'
+    autoMarkedVer = '{0} arquivos marcados. A versão mais alta de cada grupo é mantida. Confira os grupos antes de excluir: nomes parecidos podem ser mods diferentes.'
+    scanError = 'A busca foi interrompida por um erro: {0}'
+    brokenPkg = 'Arquivos .package danificados (não são um pacote válido do The Sims 4)'
+    oldGame = 'Arquivos do The Sims 2 ou The Sims 3 (não funcionam no The Sims 4)'
+    brokenScript = 'Mods de script danificados (o .ts4script não é um ZIP válido)'
+    brokenNone = 'Nenhum arquivo de mod danificado ou errado encontrado ({0} arquivos verificados).'
+    brokenFound = '{0} arquivos de mods danificados ou errados encontrados. Eles não funcionam no jogo e podem ser excluídos.'
+    checking = 'Verificando arquivos: {0} de {1} ...'
+    errGroup = 'Relatórios de erro em {0}  ({1} arquivos)'
+    errNone = 'Nenhum relatório de erro encontrado em {0}.'
+    errFound = '{0} relatórios de erro encontrados. Abra um em um editor de texto para ver qual mod é citado.'
 }
 
 # Remember the chosen language between starts
@@ -707,6 +843,10 @@ try {
     if (Test-Path -LiteralPath $settingsFile) {
         $saved = (Get-Content -LiteralPath $settingsFile -ErrorAction Stop | Select-Object -First 1).Trim()
         if ($LangCodes -contains $saved) { $script:curLang = $saved }
+    } else {
+        # First start: use the Windows display language if ModSweep has it
+        $sys = [System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName
+        if ($LangCodes -contains $sys) { $script:curLang = $sys }
     }
 } catch { }
 
@@ -750,12 +890,13 @@ function Ask-YesNo([string]$text, [string]$titleKey = 'tConfirm') {
 # =====================================================================
 # Helpers
 # =====================================================================
-$AppVersion = '1.1.0'
+$AppVersion = '1.2.0'
 $script:lastMode = -1
 $script:sorter = New-Object ModSorter
 
 $MODE_HASH = 0; $MODE_NAME = 1; $MODE_VERSION = 2; $MODE_TYPE = 3
 $MODE_JUNK = 4; $MODE_EMPTY = 5; $MODE_BIG = 6; $MODE_DEPTH = 7
+$MODE_BROKEN = 8; $MODE_ERRORS = 9
 
 $simsFolderNames = @('The Sims 4', 'Die Sims 4', 'Les Sims 4', 'Los Sims 4', 'De Sims 4', 'I Sims 4')
 
@@ -872,12 +1013,18 @@ function Get-Tree([string]$root) {
     $bad = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
     $stack = New-Object System.Collections.Generic.Stack[System.IO.DirectoryInfo]
     $stack.Push((New-Object System.IO.DirectoryInfo($root)))
+    $seen = 0
     while ($stack.Count -gt 0) {
         $d = $stack.Pop()
+        # Keep the window responsive on very big Mods folders
+        $seen++
+        if ($seen % 200 -eq 0) { [System.Windows.Forms.Application]::DoEvents() }
         try { $entries = $d.GetFileSystemInfos() } catch { [void]$bad.Add($d.FullName); continue }
         foreach ($en in $entries) {
             if ($en -is [System.IO.DirectoryInfo]) {
-                if ($en.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { [void]$bad.Add($en.FullName); continue }
+                if (($en.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -and [LinkInfo]::IsRealLink($en.FullName)) {
+                    [void]$bad.Add($en.FullName); continue
+                }
                 $dirs.Add($en)
                 $stack.Push($en)
             } else {
@@ -1301,11 +1448,82 @@ function Add-FolderItem($d, [string]$root, $lvg) {
     $list.Items.Add($item) | Out-Null
 }
 
+function Group-Files($files, [scriptblock]$keyOf) {
+    # Much faster than Group-Object in Windows PowerShell 5.1 on big folders
+    $d = New-Object 'System.Collections.Generic.Dictionary[string,System.Collections.Generic.List[object]]'
+    foreach ($f in $files) {
+        $k = [string](& $keyOf $f)
+        $l = $null
+        if (-not $d.TryGetValue($k, [ref]$l)) {
+            $l = New-Object System.Collections.Generic.List[object]
+            $d[$k] = $l
+        }
+        $l.Add($f)
+    }
+    return $d
+}
+
+# Can the game load this file where it is? Scripts: max 1 subfolder, packages: max 5.
+function Test-Loadable($f, [string]$base) {
+    if (-not $base) { return $true }
+    $e = $f.Extension.ToLowerInvariant()
+    if ($e -eq '.ts4script') { return ((Get-Depth $f.DirectoryName $base) -le 1) }
+    if ($e -eq '.package') { return ((Get-Depth $f.DirectoryName $base) -le 5) }
+    return $true
+}
+
+# Turns the version part of a name into a sortable text, e.g. "v4.2" -> "000004.000002"
+function Get-VersionRank($f) {
+    $b = $f.BaseName.ToLowerInvariant()
+    $m = [regex]::Matches($b, '(?<![a-z])v(?:er(?:sion)?)?[\s_\.]?(\d+(?:[\._]\d+)*)|(\d+\.\d+(?:\.\d+)*)')
+    if ($m.Count -eq 0) { return '' }
+    $last = $m[$m.Count - 1]
+    $num = $(if ($last.Groups[1].Success) { $last.Groups[1].Value } else { $last.Groups[2].Value })
+    return ((($num -split '[\._]') | ForEach-Object { $_.PadLeft(6, '0') }) -join '.')
+}
+
+# Checks the first bytes of a mod file. Returns a text key if the file cannot work, else $null.
+#   Sims 4 packages start with "DBPF" and format version 2.1.
+#   Sims 3 used version 2.0 and Sims 2 version 1.x. Those files do not work in Sims 4.
+#   Script mods (.ts4script) are ZIP files and start with "PK".
+function Get-ModProblem($f) {
+    $e = $f.Extension.ToLowerInvariant()
+    if ($e -ne '.package' -and $e -ne '.ts4script') { return $null }
+    $buf = New-Object byte[] 12
+    $n = 0
+    try {
+        $fs = [System.IO.File]::Open($f.FullName, 'Open', 'Read', 'ReadWrite')
+        try { $n = $fs.Read($buf, 0, 12) } finally { $fs.Dispose() }
+    } catch { return $null }   # locked or no access: we cannot tell, so we say nothing
+    if ($e -eq '.ts4script') {
+        if ($n -ge 4 -and $buf[0] -eq 0x50 -and $buf[1] -eq 0x4B -and
+            (($buf[2] -eq 3 -and $buf[3] -eq 4) -or ($buf[2] -eq 5 -and $buf[3] -eq 6))) { return $null }
+        return 'brokenScript'
+    }
+    if ($n -lt 12 -or [System.Text.Encoding]::ASCII.GetString($buf, 0, 4) -ne 'DBPF') { return 'brokenPkg' }
+    $major = [BitConverter]::ToUInt32($buf, 4)
+    $minor = [BitConverter]::ToUInt32($buf, 8)
+    if ($major -eq 2 -and $minor -eq 1) { return $null }
+    if ($major -eq 1 -or ($major -eq 2 -and $minor -eq 0)) { return 'oldGame' }
+    return 'brokenPkg'
+}
+
+# Sorts a group so the file to keep comes first
+function Sort-KeepFirst($group, [string]$base, [bool]$byVersion) {
+    $keys = @()
+    if ($byVersion) { $keys += @{ Expression = { Get-VersionRank $_ }; Descending = $true } }
+    $keys += @{ Expression = { Test-Loadable $_ $base }; Descending = $true }
+    $keys += @{ Expression = 'LastWriteTime'; Descending = $true }
+    return @($group | Sort-Object -Property $keys)
+}
+
 function Add-DuplicateGroups($groups, [string]$root, [string]$headerKey) {
     $n = 0
+    $base = Find-ModsBase $root
+    $byVersion = ($headerKey -eq 'groupVer')
     foreach ($g in $groups) {
         $n++
-        $sorted = @($g | Sort-Object LastWriteTime -Descending)
+        $sorted = Sort-KeepFirst $g $base $byVersion
         $lvg = New-Group ((T $headerKey) -f $n, $sorted[0].Name, $sorted.Count)
         foreach ($f in $sorted) { Add-FileItem $f $root $lvg | Out-Null }
     }
@@ -1323,6 +1541,7 @@ function Start-Scan {
         return
     }
     $root = (Resolve-Path -LiteralPath $rootInput).ProviderPath.TrimEnd('\')
+    if ($root -match '^[A-Za-z]:$') { $root += '\' }   # a drive root like D:\ must keep its backslash
     Save-LastFolder $root
 
     $exts = @()
@@ -1341,7 +1560,8 @@ function Start-Scan {
     Update-Ui
 
     try {
-        $tree = Get-Tree $root
+        if ($mode -eq $MODE_ERRORS) { $tree = @{ Files = @(); Dirs = @(); Bad = @() } }
+        else { $tree = Get-Tree $root }
         $files = @($tree.Files)
         if ($mode -ne $MODE_JUNK) {
             # System leftovers like Thumbs.db or ._name are not real mods
@@ -1359,8 +1579,9 @@ function Start-Scan {
             0 {  # same content
                 # Only files of equal size can be identical, this saves a lot of time
                 $toHash = New-Object System.Collections.Generic.List[object]
-                foreach ($g in ($files | Where-Object { $_.Length -gt 0 } | Group-Object Length)) {
-                    if ($g.Count -gt 1) { foreach ($f in $g.Group) { $toHash.Add($f) } }
+                $bySize = Group-Files @($files | Where-Object { $_.Length -gt 0 }) { $args[0].Length }
+                foreach ($l in $bySize.Values) {
+                    if ($l.Count -gt 1) { foreach ($f in $l) { $toHash.Add($f) } }
                 }
                 $byHash = @{}
                 $i = 0
@@ -1381,7 +1602,7 @@ function Start-Scan {
                 }
                 $groups = New-Object System.Collections.Generic.List[object]
                 $wasted = 0
-                foreach ($k in $byHash.Keys) {
+                foreach ($k in ($byHash.Keys | Sort-Object)) {
                     if ($byHash[$k].Count -gt 1) {
                         $groups.Add($byHash[$k])
                         $wasted += [long]$byHash[$k][0].Length * ($byHash[$k].Count - 1)
@@ -1394,8 +1615,9 @@ function Start-Scan {
 
             1 {  # same name
                 $groups = New-Object System.Collections.Generic.List[object]
-                foreach ($g in ($files | Group-Object { $_.Name.ToLowerInvariant() })) {
-                    if ($g.Count -gt 1) { $groups.Add($g.Group) }
+                $byName = Group-Files $files { $args[0].Name.ToLowerInvariant() }
+                foreach ($k in ($byName.Keys | Sort-Object)) {
+                    if ($byName[$k].Count -gt 1) { $groups.Add($byName[$k]) }
                 }
                 $n = Add-DuplicateGroups $groups $root 'groupDup'
                 if ($n -eq 0) { $msg = (T 'nameNone') -f $files.Count }
@@ -1404,13 +1626,15 @@ function Start-Scan {
 
             2 {  # versions
                 $groups = New-Object System.Collections.Generic.List[object]
-                foreach ($g in ($files | Group-Object { (Get-VersionKey $_) + '|' + $_.Extension.ToLowerInvariant() })) {
+                $byVer = Group-Files $files { (Get-VersionKey $args[0]) + '|' + $args[0].Extension.ToLowerInvariant() }
+                foreach ($k in ($byVer.Keys | Sort-Object)) {
+                    $g = $byVer[$k]
                     if ($g.Count -lt 2) { continue }
-                    $keyName = $g.Name.Split('|')[0]
+                    $keyName = $k.Split('|')[0]
                     if ($keyName.Length -lt 3) { continue }
-                    $distinct = @($g.Group | ForEach-Object { $_.Name.ToLowerInvariant() } | Select-Object -Unique)
+                    $distinct = @($g | ForEach-Object { $_.Name.ToLowerInvariant() } | Select-Object -Unique)
                     if ($distinct.Count -lt 2) { continue }
-                    $groups.Add($g.Group)
+                    $groups.Add($g)
                 }
                 $n = Add-DuplicateGroups $groups $root 'groupVer'
                 if ($n -eq 0) { $msg = T 'verNone' }
@@ -1530,12 +1754,55 @@ function Start-Scan {
                 if ($count -eq 0) { $msg = T 'depthNone' }
                 else { $msg = (T 'depthFound') -f $count, (T 'btnMove') }
             }
+
+            8 {  # broken or wrong mod files
+                $catKeys = @('oldGame', 'brokenPkg', 'brokenScript')
+                $cats = @{}
+                foreach ($k in $catKeys) { $cats[$k] = New-Object System.Collections.Generic.List[object] }
+                $mods = @($files | Where-Object { $_.Extension -in @('.package', '.ts4script') })
+                $i = 0
+                foreach ($f in $mods) {
+                    $i++
+                    if ($i % 50 -eq 0) {
+                        $status.Text = (T 'checking') -f $i, $mods.Count
+                        Update-Ui
+                    }
+                    $p = Get-ModProblem $f
+                    if ($p) { $cats[$p].Add($f) }
+                }
+                $count = 0
+                foreach ($k in $catKeys) {
+                    $items = $cats[$k]
+                    if ($items.Count -eq 0) { continue }
+                    $lvg = New-Group ((T 'groupFolder') -f (T $k), $items.Count)
+                    foreach ($f in ($items | Sort-Object FullName)) { Add-FileItem $f $root $lvg | Out-Null; $count++ }
+                }
+                if ($count -eq 0) { $msg = (T 'brokenNone') -f $mods.Count }
+                else { $msg = (T 'brokenFound') -f $count }
+            }
+
+            9 {  # game error reports
+                $sims = Find-SimsFolder
+                if (-not $sims) { $msg = T 'simsNotFound'; break }
+                $reports = @(Get-ChildItem -LiteralPath $sims -File -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Name -like 'last*exception*.txt' } | Sort-Object LastWriteTime -Descending)
+                if ($reports.Count -gt 0) {
+                    $lvg = New-Group ((T 'errGroup') -f $sims, $reports.Count)
+                    foreach ($f in $reports) { Add-FileItem $f $sims $lvg | Out-Null }
+                    $msg = (T 'errFound') -f $reports.Count
+                } else { $msg = (T 'errNone') -f $sims }
+            }
         }
 
+        if ($tree.Bad.Count -gt 0) { $msg += (T 'skippedFolders') -f $tree.Bad.Count }
         $script:lastMode = $mode
         $btnAuto.Enabled = ($mode -in @($MODE_HASH, $MODE_NAME, $MODE_VERSION))
         $btnMove.Enabled = ($mode -eq $MODE_DEPTH)
         $status.Text = $msg
+    }
+    catch {
+        $status.Text = ''
+        Show-Msg ((T 'scanError') -f $_.Exception.Message) 'tError' 'Error'
     }
     finally {
         $list.EndUpdate()
@@ -1569,7 +1836,8 @@ function Set-AutoMark {
             $first = $false
         }
     }
-    $status.Text = (T 'autoMarked') -f $list.CheckedItems.Count
+    $key = $(if ($script:lastMode -eq $MODE_VERSION) { 'autoMarkedVer' } else { 'autoMarked' })
+    $status.Text = (T $key) -f $list.CheckedItems.Count
 }
 
 function Set-AllMark {
@@ -1605,7 +1873,7 @@ function Remove-Checked {
             $path = $it.Tag.Path
             # Check folders again right before deleting: something may have been added
             if ($it.Tag.IsFolder -and -not (Test-FolderStillEmpty $path)) { $notEmpty++; continue }
-            $null = [Recycler]::Send($path)
+            $null = [Recycler]::Send($path, $form.Handle)
             if (Test-Path -LiteralPath $path) { $fail++ }
             else {
                 $list.Items.Remove($it)
@@ -1635,13 +1903,31 @@ function Move-Checked {
     if (-not (Ask-YesNo ((T 'moveConfirm') -f $checked.Count))) { return }
     $ok = 0; $skip = 0
     foreach ($it in $checked) {
-        $dest = Join-Path $it.Tag.Target (Split-Path $it.Tag.Path -Leaf)
+        $src = $it.Tag.Path
+        $dest = Join-Path $it.Tag.Target (Split-Path $src -Leaf)
         if (Test-Path -LiteralPath $dest) { $skip++; continue }
         try {
-            [System.IO.File]::Move($it.Tag.Path, $dest)
+            [System.IO.File]::Move($src, $dest)
             $list.Items.Remove($it)
             $ok++
-        } catch { $skip++ }
+        } catch { $skip++; continue }
+        # Script mods keep their settings next to the script (e.g. MCCC's .cfg files).
+        # Move those along, so the mod does not lose its settings.
+        if ($src.EndsWith('.ts4script', [System.StringComparison]::OrdinalIgnoreCase)) {
+            $dir = Split-Path $src -Parent
+            $stem = [System.IO.Path]::GetFileNameWithoutExtension($src)
+            try { $sib = @([System.IO.Directory]::GetFiles($dir)) } catch { $sib = @() }
+            foreach ($o in $sib) {
+                $n = [System.IO.Path]::GetFileName($o)
+                $e = [System.IO.Path]::GetExtension($o).ToLowerInvariant()
+                $same = [System.IO.Path]::GetFileNameWithoutExtension($o) -ieq $stem
+                if (-not ($same -or $e -eq '.cfg')) { continue }
+                if ($e -in @('.package', '.ts4script')) { continue }   # real mods are handled on their own
+                $od = Join-Path $it.Tag.Target $n
+                if (Test-Path -LiteralPath $od) { continue }
+                try { [System.IO.File]::Move($o, $od) } catch { }
+            }
+        }
     }
     $msg = (T 'moved') -f $ok
     if ($skip -gt 0) { $msg += (T 'moveSkipped') -f $skip }
@@ -1659,7 +1945,7 @@ function Save-Report {
         $o = [ordered]@{}
         $o[(T 'csvGroup')]  = $(if ($it.Group) { $it.Group.Header } else { '' })
         $o[(T 'csvMarked')] = $(if ($it.Checked) { T 'csvYes' } else { '' })
-        $o[(T 'colName')]   = $it.Text
+        $o[(T 'colName')]   = $(if ($it.Text -match '^[=+@\-]') { "'" + $it.Text } else { $it.Text })
         $o[(T 'colFolder')] = $it.SubItems[1].Text
         $o[(T 'colSize')]   = $it.SubItems[2].Text
         $o[(T 'colDate')]   = $it.SubItems[3].Text
@@ -1694,7 +1980,7 @@ function Clear-SimsCache {
     if (-not (Ask-YesNo ((T 'cacheConfirm') -f $sims, $targets.Count, "`n") 'cacheTitle')) { return }
     $ok = 0; $fail = 0
     foreach ($t in $targets) {
-        $null = [Recycler]::Send($t)
+        $null = [Recycler]::Send($t, $form.Handle)
         if (Test-Path -LiteralPath $t) { $fail++ } else { $ok++ }
     }
     $msg = (T 'cacheDone') -f $ok
@@ -1709,6 +1995,7 @@ function Backup-Mods {
         return
     }
     $root = (Resolve-Path -LiteralPath $rootInput).ProviderPath.TrimEnd('\')
+    if ($root -match '^[A-Za-z]:$') { $root += '\' }   # a drive root like D:\ must keep its backslash
     $dlg = New-Object System.Windows.Forms.SaveFileDialog
     $dlg.Filter = T 'backupFilter'
     $dlg.FileName = "$(T 'backupFile')_$(Get-Date -Format 'yyyy-MM-dd_HH-mm').zip"
@@ -1730,7 +2017,8 @@ function Backup-Mods {
     Update-Ui
     $ok = 0; $fail = 0
     try {
-        $files = @((Get-Tree $root).Files)
+        $btree = Get-Tree $root
+        $files = @($btree.Files)
         $base = Split-Path $root -Leaf
         if (-not $base) { $base = 'Backup' }
         if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Force -ErrorAction Stop }
@@ -1753,6 +2041,7 @@ function Backup-Mods {
         $size = (Get-Item -LiteralPath $target).Length
         $msg = (T 'backupDone') -f $target, $ok, (Format-Size $size)
         if ($fail -gt 0) { $msg += (T 'backupFail') -f $fail }
+        if ($btree.Bad.Count -gt 0) { $msg += (T 'skippedFolders') -f $btree.Bad.Count }
         $status.Text = $msg
     }
     catch {

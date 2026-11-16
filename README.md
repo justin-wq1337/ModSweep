@@ -11,7 +11,7 @@ Everything you delete goes to the **Recycle Bin** (Trash on Mac and Linux), so n
 
 ## Features
 
-**8 search types**
+**10 search types**
 
 * **Duplicate files (same content):** finds identical mods, even if they have different names
 * **Duplicate file names:** same name in different folders
@@ -21,18 +21,20 @@ Everything you delete goes to the **Recycle Bin** (Trash on Mac and Linux), so n
 * **Empty folders**
 * **Largest files:** see what takes up the most space
 * **Misplaced mods:** script mods deeper than 1 subfolder and packages deeper than 5 subfolders, which the game does not load
+* **Broken or wrong mod files:** damaged or incomplete downloads, and files for Sims 2 or Sims 3 that do not work in Sims 4
+* **Game error reports:** the lastException files the game writes into the Sims 4 folder, so you can open or clean them up
 
 **Tools**
 
-* **Mark (keep newest):** marks all duplicates except the newest file of each group
-* **Move marked to correct folder:** moves misplaced mods up to the deepest allowed level with one click
+* **Mark (keep newest):** marks all duplicates except one file per group. It keeps the highest version for "Several versions", and always prefers a file the game can actually load
+* **Move marked to correct folder:** moves misplaced mods up to the deepest allowed level with one click. Script mods take their settings files (.cfg) with them
 * **Clear Sims cache:** deletes localthumbcache.package and the cache folders
 * **Check update status online:** opens Scarlet's Mod List (you choose the SFW or SFW + NSFW edition)
 * **Save list (Excel):** export any result list as a table
 * **Backup Mods folder:** packs your Mods folder into a ZIP file wherever you want, so you can restore it any time
 * **Show in Explorer**, sorting by name, folder, size or date
 
-**6 languages:** English, German, Spanish, French, Polish and Portuguese (Brazil)
+**6 languages:** English, German, Spanish, French, Polish and Portuguese (Brazil). On the first start ModSweep uses your system language.
 
 **Light and dark mode:** follows your system setting, or choose light or dark yourself
 
@@ -73,12 +75,13 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 * Deleted files go to the **Recycle Bin** or Trash. If Windows cannot use the Recycle Bin (for example on a network drive), Windows asks you before anything is deleted for good.
 * Empty folders are checked again right before they are deleted, so nothing that was added in the meantime is lost.
 * For duplicates and versions, ModSweep never lets you delete every file of a group.
+* ModSweep was made with the help of an AI assistant (Claude by Anthropic).
 * Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scans of version 1.1.0, no security vendor flagged either file:
+VirusTotal scans of version 1.2.0:
 
-* Windows ZIP: **0 of 56** ([full report](https://www.virustotal.com/gui/file/757ef761a9e69eb00699a905025d4e0503e53b35df0bae487ff78b9572cc36b3))
-* Mac and Linux ZIP: **0 of 65** ([full report](https://www.virustotal.com/gui/file/f1869cb6dd8c8600dbe1dc81390cb9073b30bae776d61bdad570855b5748526b))
+* Windows ZIP: [full report](https://www.virustotal.com/gui/file/d30ea6cafc6d7e7e6a25ffcc06ce80a394033712018770321736dc085700fd58)
+* Mac and Linux ZIP: [full report](https://www.virustotal.com/gui/file/1cca5cb77544cabb25808e36b6374aed3f50e1b4cd30a452b9308bf5864faf73)
 
 
 ## FAQ
@@ -91,6 +94,21 @@ No. There is no common database for Sims 4 mod versions. The "Check update statu
 
 **Does it work on Mac and Linux?**
 Yes, with the Mac and Linux edition. The Mac and Linux edition is new, so please report any problems in the Issues tab.
+
+
+## What's new in 1.2.0
+
+* New search: **Broken or wrong mod files.** Finds damaged or incomplete downloads and Sims 2 or Sims 3 files, which do not work in Sims 4 and can make the game crash
+* New search: **Game error reports.** Lists the lastException files in your Sims 4 folder
+* ModSweep now starts in your system language
+* Fixed (Windows): Mods folders inside OneDrive were not searched completely, and the backup could miss files
+* Fixed (Mac and Linux): a single very old file (dated before 1980) stopped the whole backup
+* "Mark (keep newest)" keeps the highest version for "Several versions" and prefers files the game can load
+* Moving a script mod to the correct folder now moves its settings files (e.g. MCCC's .cfg) along
+* Folders that could not be read (links, no access, path too long) are now reported instead of skipped silently
+* Faster on very big Mods folders (Windows), faster marking on long lists (Mac and Linux)
+* Windows questions about permanent deleting now always open in front of ModSweep
+* Small fixes: drive roots like D:\, safer CSV export, clearer error messages
 
 
 ## What's new in 1.1.0

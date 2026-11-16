@@ -12,9 +12,11 @@ import datetime
 import glob
 import hashlib
 import json
+import locale
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import threading
@@ -23,7 +25,7 @@ import webbrowser
 import zipfile
 
 IS_MAC = sys.platform == 'darwin'
-APP_VERSION = '1.1.0'
+APP_VERSION = '1.2.0'
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 LANG_CODES = ['en', 'de', 'es', 'fr', 'pl', 'pt']
@@ -39,7 +41,9 @@ LANG = json.loads(r'''{
    "Unneeded files (archives, readmes, images, 0 bytes)",
    "Empty folders",
    "Largest files",
-   "Misplaced mods (nested too deep)"
+   "Misplaced mods (nested too deep)",
+   "Broken or wrong mod files (damaged, Sims 2/3)",
+   "Game error reports (lastException)"
   ],
   "hints": [
    "Finds files with exactly the same content, even if they have different names.",
@@ -49,7 +53,9 @@ LANG = json.loads(r'''{
    "Shows archives, readmes, preview images and empty files. Sims 4 does not need them.",
    "Shows folders that no longer contain a single file.",
    "Shows the 200 largest files, so you can see what takes up the most space.",
-   "Sims 4 loads .ts4script only 1 subfolder deep and .package up to 5 subfolders deep."
+   "Sims 4 loads .ts4script only 1 subfolder deep and .package up to 5 subfolders deep.",
+   "Finds damaged .package and .ts4script files and files for Sims 2 or 3. They do not work in Sims 4.",
+   "Shows the error reports of the game (lastException). Delete old ones after fixing your mods."
   ],
   "title": "ModSweep for The Sims 4",
   "folder": "Folder:",
@@ -107,7 +113,7 @@ LANG = json.loads(r'''{
   "depthFound": "{0} files are nested too deep and are not loaded by the game. Mark them and click \"{1}\".",
   "explorerEmpty": "The list is still empty. Please click \"{0}\" first.",
   "explorerSelect": "Please click a row in the list first.",
-  "autoMarked": "{0} files marked. The newest file of each group is kept.",
+  "autoMarked": "{0} files marked. The newest file of each group is kept, files the game can load come first.",
   "allMarked": "{0} entries marked.",
   "nothingMarked": "Nothing is marked.",
   "keepOne": "Everything in \"{0}\" is marked. At least one file should stay.",
@@ -156,7 +162,19 @@ LANG = json.loads(r'''{
   "backupFail": " {0} files could not be added.",
   "backupError": "Backup failed: {0}",
   "backupFilter": "ZIP file (*.zip)|*.zip",
-  "backupFile": "Mods-Backup"
+  "backupFile": "Mods-Backup",
+  "skippedFolders": " {0} folders were skipped because they could not be read (link, no access or path too long).",
+  "autoMarkedVer": "{0} files marked. The highest version of each group is kept. Please check the groups before deleting: similar names can be different mods.",
+  "scanError": "The search was stopped because of an error: {0}",
+  "brokenPkg": "Damaged .package files (not a valid Sims 4 package)",
+  "oldGame": "Files for Sims 2 or Sims 3 (do not work in Sims 4)",
+  "brokenScript": "Damaged script mods (.ts4script is not a valid ZIP)",
+  "brokenNone": "No broken or wrong mod files found ({0} files checked).",
+  "brokenFound": "{0} broken or wrong mod files found. They do not work in the game and can be deleted.",
+  "checking": "Checking files: {0} of {1} ...",
+  "errGroup": "Error reports in {0}  ({1} files)",
+  "errNone": "No error reports found in {0}.",
+  "errFound": "{0} error reports found. Open one in a text editor to see which mod is mentioned."
  },
  "de": {
   "modes": [
@@ -167,7 +185,9 @@ LANG = json.loads(r'''{
    "Unnötige Dateien (Archive, Readmes, Bilder, 0 Byte)",
    "Leere Ordner",
    "Größte Dateien",
-   "Falsch einsortierte Mods (zu tief verschachtelt)"
+   "Falsch einsortierte Mods (zu tief verschachtelt)",
+   "Defekte oder falsche Mod-Dateien (beschädigt, Sims 2/3)",
+   "Fehlerberichte des Spiels (lastException)"
   ],
   "hints": [
    "Findet Dateien mit exakt gleichem Inhalt, auch wenn sie anders heißen.",
@@ -177,7 +197,9 @@ LANG = json.loads(r'''{
    "Zeigt Archive, Anleitungen, Vorschaubilder und leere Dateien. Sims 4 braucht diese nicht.",
    "Zeigt Ordner, in denen keine einzige Datei mehr liegt.",
    "Zeigt die 200 größten Dateien. So siehst du, was am meisten Platz belegt.",
-   "Sims 4 lädt .ts4script nur bis 1 Unterordner tief und .package bis 5 Unterordner tief."
+   "Sims 4 lädt .ts4script nur bis 1 Unterordner tief und .package bis 5 Unterordner tief.",
+   "Findet beschädigte .package- und .ts4script-Dateien und Dateien für Sims 2 oder 3. Sie laufen nicht in Sims 4.",
+   "Zeigt die Fehlerberichte des Spiels (lastException). Alte Berichte nach der Reparatur löschen."
   ],
   "title": "ModSweep for The Sims 4",
   "folder": "Ordner:",
@@ -235,7 +257,7 @@ LANG = json.loads(r'''{
   "depthFound": "{0} Dateien liegen zu tief und werden vom Spiel nicht geladen. Markieren und auf \"{1}\" klicken.",
   "explorerEmpty": "Die Liste ist noch leer. Bitte zuerst auf \"{0}\" klicken.",
   "explorerSelect": "Bitte zuerst eine Zeile in der Liste anklicken.",
-  "autoMarked": "{0} Dateien markiert. Die neueste Datei jeder Gruppe bleibt erhalten.",
+  "autoMarked": "{0} Dateien markiert. Die neueste Datei jeder Gruppe bleibt erhalten, Dateien, die das Spiel laden kann, haben Vorrang.",
   "allMarked": "{0} Einträge markiert.",
   "nothingMarked": "Es ist nichts markiert.",
   "keepOne": "In \"{0}\" ist alles markiert. Mindestens eine Datei sollte bleiben.",
@@ -284,7 +306,19 @@ LANG = json.loads(r'''{
   "backupFail": " {0} Dateien konnten nicht hinzugefügt werden.",
   "backupError": "Sicherung fehlgeschlagen: {0}",
   "backupFilter": "ZIP-Datei (*.zip)|*.zip",
-  "backupFile": "Mods-Sicherung"
+  "backupFile": "Mods-Sicherung",
+  "skippedFolders": " {0} Ordner wurden übersprungen, weil sie nicht gelesen werden konnten (Verknüpfung, kein Zugriff oder Pfad zu lang).",
+  "autoMarkedVer": "{0} Dateien markiert. Die höchste Version jeder Gruppe bleibt erhalten. Bitte prüfe die Gruppen vor dem Löschen: Ähnliche Namen können verschiedene Mods sein.",
+  "scanError": "Die Suche wurde wegen eines Fehlers abgebrochen: {0}",
+  "brokenPkg": "Beschädigte .package-Dateien (kein gültiges Sims-4-Paket)",
+  "oldGame": "Dateien für Sims 2 oder Sims 3 (funktionieren nicht in Sims 4)",
+  "brokenScript": "Beschädigte Skript-Mods (.ts4script ist kein gültiges ZIP)",
+  "brokenNone": "Keine defekten oder falschen Mod-Dateien gefunden ({0} Dateien geprüft).",
+  "brokenFound": "{0} defekte oder falsche Mod-Dateien gefunden. Sie funktionieren im Spiel nicht und können gelöscht werden.",
+  "checking": "Prüfe Dateien: {0} von {1} ...",
+  "errGroup": "Fehlerberichte in {0}  ({1} Dateien)",
+  "errNone": "Keine Fehlerberichte gefunden in {0}.",
+  "errFound": "{0} Fehlerberichte gefunden. Öffne einen in einem Texteditor, um zu sehen, welcher Mod genannt wird."
  },
  "es": {
   "modes": [
@@ -295,7 +329,9 @@ LANG = json.loads(r'''{
    "Archivos innecesarios (comprimidos, léeme, imágenes, 0 bytes)",
    "Carpetas vacías",
    "Archivos más grandes",
-   "Mods mal colocados (demasiado profundos)"
+   "Mods mal colocados (demasiado profundos)",
+   "Archivos de mods dañados o incorrectos (dañados, Los Sims 2/3)",
+   "Informes de error del juego (lastException)"
   ],
   "hints": [
    "Encuentra archivos con exactamente el mismo contenido, aunque tengan otro nombre.",
@@ -305,7 +341,9 @@ LANG = json.loads(r'''{
    "Muestra comprimidos, léeme, imágenes de vista previa y archivos vacíos. Los Sims 4 no los necesita.",
    "Muestra carpetas que ya no contienen ningún archivo.",
    "Muestra los 200 archivos más grandes para ver qué ocupa más espacio.",
-   "Los Sims 4 carga .ts4script como máximo a 1 subcarpeta y .package como máximo a 5 subcarpetas."
+   "Los Sims 4 carga .ts4script como máximo a 1 subcarpeta y .package como máximo a 5 subcarpetas.",
+   "Busca .package y .ts4script dañados y archivos de Los Sims 2 o 3. No funcionan en Los Sims 4.",
+   "Muestra los informes de error del juego (lastException). Borra los antiguos tras arreglar tus mods."
   ],
   "title": "ModSweep for The Sims 4",
   "folder": "Carpeta:",
@@ -363,7 +401,7 @@ LANG = json.loads(r'''{
   "depthFound": "{0} archivos están demasiado profundos y el juego no los carga. Márcalos y haz clic en \"{1}\".",
   "explorerEmpty": "La lista está vacía. Haz clic primero en \"{0}\".",
   "explorerSelect": "Haz clic primero en una fila de la lista.",
-  "autoMarked": "{0} archivos marcados. Se conserva el archivo más nuevo de cada grupo.",
+  "autoMarked": "{0} archivos marcados. Se conserva el archivo más nuevo de cada grupo; primero los que el juego puede cargar.",
   "allMarked": "{0} elementos marcados.",
   "nothingMarked": "No hay nada marcado.",
   "keepOne": "En \"{0}\" está todo marcado. Debe quedar al menos un archivo.",
@@ -412,7 +450,19 @@ LANG = json.loads(r'''{
   "backupFail": " No se pudieron añadir {0} archivos.",
   "backupError": "Error en la copia de seguridad: {0}",
   "backupFilter": "Archivo ZIP (*.zip)|*.zip",
-  "backupFile": "Copia-Mods"
+  "backupFile": "Copia-Mods",
+  "skippedFolders": " Se omitieron {0} carpetas porque no se pudieron leer (enlace, sin acceso o ruta demasiado larga).",
+  "autoMarkedVer": "{0} archivos marcados. Se conserva la versión más alta de cada grupo. Revisa los grupos antes de borrar: nombres parecidos pueden ser mods distintos.",
+  "scanError": "La búsqueda se detuvo por un error: {0}",
+  "brokenPkg": "Archivos .package dañados (no son un paquete válido de Los Sims 4)",
+  "oldGame": "Archivos de Los Sims 2 o Los Sims 3 (no funcionan en Los Sims 4)",
+  "brokenScript": "Mods de script dañados (el .ts4script no es un ZIP válido)",
+  "brokenNone": "No se encontraron archivos de mods dañados o incorrectos ({0} archivos revisados).",
+  "brokenFound": "Se encontraron {0} archivos de mods dañados o incorrectos. No funcionan en el juego y se pueden borrar.",
+  "checking": "Revisando archivos: {0} de {1} ...",
+  "errGroup": "Informes de error en {0}  ({1} archivos)",
+  "errNone": "No se encontraron informes de error en {0}.",
+  "errFound": "Se encontraron {0} informes de error. Abre uno con un editor de texto para ver qué mod aparece."
  },
  "fr": {
   "modes": [
@@ -423,7 +473,9 @@ LANG = json.loads(r'''{
    "Fichiers inutiles (archives, readme, images, 0 octet)",
    "Dossiers vides",
    "Fichiers les plus volumineux",
-   "Mods mal rangés (trop profonds)"
+   "Mods mal rangés (trop profonds)",
+   "Fichiers de mods abîmés ou incorrects (abîmés, Sims 2/3)",
+   "Rapports d'erreur du jeu (lastException)"
   ],
   "hints": [
    "Trouve les fichiers au contenu identique, même s'ils portent un autre nom.",
@@ -433,7 +485,9 @@ LANG = json.loads(r'''{
    "Affiche les archives, readme, images d'aperçu et fichiers vides. Sims 4 n'en a pas besoin.",
    "Affiche les dossiers qui ne contiennent plus aucun fichier.",
    "Affiche les 200 plus gros fichiers pour voir ce qui prend le plus de place.",
-   "Sims 4 charge les .ts4script à 1 sous-dossier maximum et les .package à 5 sous-dossiers maximum."
+   "Sims 4 charge les .ts4script à 1 sous-dossier maximum et les .package à 5 sous-dossiers maximum.",
+   "Trouve les .package et .ts4script abîmés et les fichiers pour Les Sims 2 ou 3. Ils ne marchent pas.",
+   "Affiche les rapports d'erreur du jeu (lastException). Supprime les anciens après réparation."
   ],
   "title": "ModSweep for The Sims 4",
   "folder": "Dossier :",
@@ -491,7 +545,7 @@ LANG = json.loads(r'''{
   "depthFound": "{0} fichiers sont trop profonds et ne sont pas chargés par le jeu. Cochez-les et cliquez sur \"{1}\".",
   "explorerEmpty": "La liste est vide. Cliquez d'abord sur \"{0}\".",
   "explorerSelect": "Cliquez d'abord sur une ligne de la liste.",
-  "autoMarked": "{0} fichiers cochés. Le fichier le plus récent de chaque groupe est conservé.",
+  "autoMarked": "{0} fichiers cochés. Le fichier le plus récent de chaque groupe est conservé, en priorité ceux que le jeu peut charger.",
   "allMarked": "{0} éléments cochés.",
   "nothingMarked": "Rien n'est coché.",
   "keepOne": "Tout est coché dans \"{0}\". Au moins un fichier doit rester.",
@@ -540,7 +594,19 @@ LANG = json.loads(r'''{
   "backupFail": " {0} fichiers n'ont pas pu être ajoutés.",
   "backupError": "Échec de la sauvegarde : {0}",
   "backupFilter": "Fichier ZIP (*.zip)|*.zip",
-  "backupFile": "Sauvegarde-Mods"
+  "backupFile": "Sauvegarde-Mods",
+  "skippedFolders": " {0} dossiers ont été ignorés car ils n'ont pas pu être lus (lien, accès refusé ou chemin trop long).",
+  "autoMarkedVer": "{0} fichiers cochés. La version la plus haute de chaque groupe est conservée. Vérifie les groupes avant de supprimer : des noms proches peuvent être des mods différents.",
+  "scanError": "La recherche a été arrêtée à cause d'une erreur : {0}",
+  "brokenPkg": "Fichiers .package abîmés (pas un package Sims 4 valide)",
+  "oldGame": "Fichiers pour Les Sims 2 ou Les Sims 3 (ne fonctionnent pas dans Les Sims 4)",
+  "brokenScript": "Mods de script abîmés (le .ts4script n'est pas un ZIP valide)",
+  "brokenNone": "Aucun fichier de mod abîmé ou incorrect trouvé ({0} fichiers vérifiés).",
+  "brokenFound": "{0} fichiers de mods abîmés ou incorrects trouvés. Ils ne fonctionnent pas dans le jeu et peuvent être supprimés.",
+  "checking": "Vérification des fichiers : {0} sur {1} ...",
+  "errGroup": "Rapports d'erreur dans {0}  ({1} fichiers)",
+  "errNone": "Aucun rapport d'erreur trouvé dans {0}.",
+  "errFound": "{0} rapports d'erreur trouvés. Ouvre-en un avec un éditeur de texte pour voir quel mod est cité."
  },
  "pl": {
   "modes": [
@@ -551,7 +617,9 @@ LANG = json.loads(r'''{
    "Zbędne pliki (archiwa, readme, obrazy, 0 bajtów)",
    "Puste foldery",
    "Największe pliki",
-   "Źle umieszczone mody (zbyt głęboko)"
+   "Źle umieszczone mody (zbyt głęboko)",
+   "Uszkodzone lub niewłaściwe pliki modów (uszkodzone, Simsy 2/3)",
+   "Raporty błędów gry (lastException)"
   ],
   "hints": [
    "Znajduje pliki o identycznej zawartości, nawet jeśli mają inne nazwy.",
@@ -561,7 +629,9 @@ LANG = json.loads(r'''{
    "Pokazuje archiwa, pliki readme, obrazy podglądu i puste pliki. The Sims 4 ich nie potrzebuje.",
    "Pokazuje foldery, w których nie ma już żadnego pliku.",
    "Pokazuje 200 największych plików, aby było widać, co zajmuje najwięcej miejsca.",
-   "The Sims 4 wczytuje pliki .ts4script najwyżej 1 podfolder w głąb, a pliki .package najwyżej 5."
+   "The Sims 4 wczytuje pliki .ts4script najwyżej 1 podfolder w głąb, a pliki .package najwyżej 5.",
+   "Znajduje uszkodzone pliki .package i .ts4script oraz pliki do Simsów 2 lub 3. Nie działają w Simsach 4.",
+   "Pokazuje raporty błędów gry (lastException). Stare raporty usuń po naprawieniu modów."
   ],
   "title": "ModSweep for The Sims 4",
   "folder": "Folder:",
@@ -619,7 +689,7 @@ LANG = json.loads(r'''{
   "depthFound": "Plików leżących za głęboko: {0}. Gra ich nie wczytuje. Zaznacz je i kliknij \"{1}\".",
   "explorerEmpty": "Lista jest pusta. Najpierw kliknij \"{0}\".",
   "explorerSelect": "Najpierw kliknij wiersz na liście.",
-  "autoMarked": "Zaznaczono plików: {0}. Najnowszy plik z każdej grupy zostaje.",
+  "autoMarked": "Zaznaczono plików: {0}. Najnowszy plik z każdej grupy zostaje, pierwszeństwo mają pliki, które gra może wczytać.",
   "allMarked": "Zaznaczono elementów: {0}.",
   "nothingMarked": "Nic nie jest zaznaczone.",
   "keepOne": "W \"{0}\" zaznaczono wszystko. Przynajmniej jeden plik powinien zostać.",
@@ -668,7 +738,19 @@ LANG = json.loads(r'''{
   "backupFail": " Nie udało się dodać plików: {0}.",
   "backupError": "Tworzenie kopii zapasowej nie powiodło się: {0}",
   "backupFilter": "Plik ZIP (*.zip)|*.zip",
-  "backupFile": "Kopia-Mods"
+  "backupFile": "Kopia-Mods",
+  "skippedFolders": " Pominięto folderów: {0}, ponieważ nie można ich odczytać (skrót, brak dostępu lub zbyt długa ścieżka).",
+  "autoMarkedVer": "Zaznaczono plików: {0}. Najwyższa wersja z każdej grupy zostaje. Sprawdź grupy przed usunięciem: podobne nazwy mogą oznaczać różne mody.",
+  "scanError": "Wyszukiwanie zostało przerwane z powodu błędu: {0}",
+  "brokenPkg": "Uszkodzone pliki .package (to nie jest prawidłowa paczka Simsów 4)",
+  "oldGame": "Pliki do Simsów 2 lub Simsów 3 (nie działają w Simsach 4)",
+  "brokenScript": "Uszkodzone mody skryptowe (.ts4script nie jest prawidłowym plikiem ZIP)",
+  "brokenNone": "Nie znaleziono uszkodzonych ani niewłaściwych plików modów (sprawdzono plików: {0}).",
+  "brokenFound": "Znaleziono uszkodzone lub niewłaściwe pliki modów: {0}. Nie działają w grze i można je usunąć.",
+  "checking": "Sprawdzanie plików: {0} z {1} ...",
+  "errGroup": "Raporty błędów w {0}  (plików: {1})",
+  "errNone": "Nie znaleziono raportów błędów w {0}.",
+  "errFound": "Znaleziono raporty błędów: {0}. Otwórz jeden w edytorze tekstu, aby zobaczyć, który mod jest w nim wymieniony."
  },
  "pt": {
   "modes": [
@@ -679,7 +761,9 @@ LANG = json.loads(r'''{
    "Arquivos desnecessários (compactados, leia-me, imagens, 0 bytes)",
    "Pastas vazias",
    "Maiores arquivos",
-   "Mods no lugar errado (muito profundos)"
+   "Mods no lugar errado (muito profundos)",
+   "Arquivos de mods danificados ou errados (danificados, The Sims 2/3)",
+   "Relatórios de erro do jogo (lastException)"
   ],
   "hints": [
    "Encontra arquivos com exatamente o mesmo conteúdo, mesmo com nomes diferentes.",
@@ -689,7 +773,9 @@ LANG = json.loads(r'''{
    "Mostra compactados, leia-me, imagens de prévia e arquivos vazios. O The Sims 4 não precisa deles.",
    "Mostra pastas que não contêm mais nenhum arquivo.",
    "Mostra os 200 maiores arquivos para você ver o que ocupa mais espaço.",
-   "O The Sims 4 carrega .ts4script no máximo 1 subpasta abaixo e .package no máximo 5 subpastas abaixo."
+   "O The Sims 4 carrega .ts4script no máximo 1 subpasta abaixo e .package no máximo 5 subpastas abaixo.",
+   "Encontra .package e .ts4script danificados e arquivos do The Sims 2 ou 3. Não funcionam no The Sims 4.",
+   "Mostra os relatórios de erro do jogo (lastException). Exclua os antigos após consertar seus mods."
   ],
   "title": "ModSweep for The Sims 4",
   "folder": "Pasta:",
@@ -747,7 +833,7 @@ LANG = json.loads(r'''{
   "depthFound": "{0} arquivos estão fundo demais e não são carregados pelo jogo. Marque-os e clique em \"{1}\".",
   "explorerEmpty": "A lista está vazia. Clique primeiro em \"{0}\".",
   "explorerSelect": "Clique primeiro em uma linha da lista.",
-  "autoMarked": "{0} arquivos marcados. O arquivo mais novo de cada grupo é mantido.",
+  "autoMarked": "{0} arquivos marcados. O arquivo mais novo de cada grupo é mantido, com prioridade para os que o jogo consegue carregar.",
   "allMarked": "{0} itens marcados.",
   "nothingMarked": "Nada está marcado.",
   "keepOne": "Tudo está marcado em \"{0}\". Pelo menos um arquivo deve ficar.",
@@ -796,11 +882,23 @@ LANG = json.loads(r'''{
   "backupFail": " {0} arquivos não puderam ser adicionados.",
   "backupError": "Falha no backup: {0}",
   "backupFilter": "Arquivo ZIP (*.zip)|*.zip",
-  "backupFile": "Backup-Mods"
+  "backupFile": "Backup-Mods",
+  "skippedFolders": " {0} pastas foram ignoradas porque não puderam ser lidas (atalho, sem acesso ou caminho longo demais).",
+  "autoMarkedVer": "{0} arquivos marcados. A versão mais alta de cada grupo é mantida. Confira os grupos antes de excluir: nomes parecidos podem ser mods diferentes.",
+  "scanError": "A busca foi interrompida por um erro: {0}",
+  "brokenPkg": "Arquivos .package danificados (não são um pacote válido do The Sims 4)",
+  "oldGame": "Arquivos do The Sims 2 ou The Sims 3 (não funcionam no The Sims 4)",
+  "brokenScript": "Mods de script danificados (o .ts4script não é um ZIP válido)",
+  "brokenNone": "Nenhum arquivo de mod danificado ou errado encontrado ({0} arquivos verificados).",
+  "brokenFound": "{0} arquivos de mods danificados ou errados encontrados. Eles não funcionam no jogo e podem ser excluídos.",
+  "checking": "Verificando arquivos: {0} de {1} ...",
+  "errGroup": "Relatórios de erro em {0}  ({1} arquivos)",
+  "errNone": "Nenhum relatório de erro encontrado em {0}.",
+  "errFound": "{0} relatórios de erro encontrados. Abra um em um editor de texto para ver qual mod é citado."
  }
 }''')
 
-MODE_HASH, MODE_NAME, MODE_VERSION, MODE_TYPE, MODE_JUNK, MODE_EMPTY, MODE_BIG, MODE_DEPTH = range(8)
+MODE_HASH, MODE_NAME, MODE_VERSION, MODE_TYPE, MODE_JUNK, MODE_EMPTY, MODE_BIG, MODE_DEPTH, MODE_BROKEN, MODE_ERRORS = range(10)
 DUP_MODES = (MODE_HASH, MODE_NAME, MODE_VERSION)
 SIMS_ONLY_MODES = (MODE_HASH, MODE_NAME, MODE_VERSION, MODE_BIG)
 SIMS_EXTS = ('.package', '.ts4script')
@@ -834,6 +932,30 @@ def load_language():
             return code
     except OSError:
         pass
+    return system_language()
+
+
+def system_language():
+    """First start: use the system language if ModSweep has it, else English."""
+    names = []
+    if IS_MAC:
+        try:
+            out = subprocess.run(['defaults', 'read', '-g', 'AppleLanguages'],
+                                 capture_output=True, text=True, timeout=5).stdout
+            names += re.findall(r'[A-Za-z]{2}', out)[:1]
+        except (OSError, subprocess.SubprocessError):
+            pass
+    for var in ('LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG'):
+        if os.environ.get(var):
+            names.append(os.environ[var])
+    try:
+        names.append(locale.getlocale()[0] or '')
+    except (ValueError, TypeError):
+        pass
+    for n in names:
+        code = n.strip()[:2].lower()
+        if code in LANG_CODES:
+            return code
     return 'en'
 
 
@@ -1108,6 +1230,52 @@ def file_hash(path):
     return h.hexdigest()
 
 
+def is_loadable(entry, base):
+    """Can the game load this file where it is? Scripts: max 1 subfolder, packages: max 5."""
+    if not base:
+        return True
+    e = os.path.splitext(entry['name'])[1].lower()
+    if e == '.ts4script':
+        return depth_of(entry['dir'], base) <= 1
+    if e == '.package':
+        return depth_of(entry['dir'], base) <= 5
+    return True
+
+
+def version_rank(name):
+    """Sortable text for the version in a name, e.g. 'Mod_v4.2' -> '000004.000002'."""
+    base = os.path.splitext(name)[0].lower()
+    found = re.findall(r'(?<![a-z])v(?:er(?:sion)?)?[\s_.]?(\d+(?:[._]\d+)*)|(\d+\.\d+(?:\.\d+)*)', base)
+    if not found:
+        return ''
+    num = found[-1][0] or found[-1][1]
+    return '.'.join(part.zfill(6) for part in re.split(r'[._]', num))
+
+
+def mod_problem(path):
+    """Checks the first bytes of a mod file. Returns a text key if it cannot work, else None.
+    Sims 4 packages start with DBPF and format version 2.1 (Sims 3 used 2.0, Sims 2 used 1.x).
+    Script mods (.ts4script) are ZIP files and start with PK."""
+    ext = os.path.splitext(path)[1].lower()
+    try:
+        with open(path, 'rb') as f:
+            head = f.read(12)
+    except OSError:
+        return None   # no access: we cannot tell, so we say nothing
+    if ext == '.ts4script':
+        return None if head[:4] in (b'PK\x03\x04', b'PK\x05\x06') else 'brokenScript'
+    if ext != '.package':
+        return None
+    if len(head) < 12 or head[:4] != b'DBPF':
+        return 'brokenPkg'
+    major, minor = struct.unpack('<II', head[4:12])
+    if (major, minor) == (2, 1):
+        return None
+    if major == 1 or (major, minor) == (2, 0):
+        return 'oldGame'
+    return 'brokenPkg'
+
+
 # =====================================================================
 # Search (runs without a window, so it can be tested on its own)
 # =====================================================================
@@ -1116,7 +1284,10 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
     root = os.path.abspath(root).rstrip(os.sep) or os.sep
     main = T('mainFolder')
     progress(T('collecting'))
-    files, dirs, bad = collect(root)
+    if mode == MODE_ERRORS:
+        files, dirs, bad = [], [], set()
+    else:
+        files, dirs, bad = collect(root)
     warn = False
     if mode != MODE_JUNK:
         # Mac and Windows leftovers like ._name or .DS_Store are not real mods
@@ -1125,10 +1296,16 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
         files = [f for f in files if os.path.splitext(f['name'])[1].lower() in SIMS_EXTS]
     groups = []
 
+    base_for_keep = find_mods_base(root)
+
     def dup_groups(raw, key):
         out = []
+        by_version = key == 'groupVer'
         for n, items in enumerate(raw, 1):
-            items = sorted(items, key=lambda e: e['mtime'], reverse=True)
+            # The file to keep comes first: highest version (version mode),
+            # then a file the game can load where it is, then the newest file.
+            items = sorted(items, key=lambda e: (version_rank(e['name']) if by_version else '',
+                                                 is_loadable(e, base_for_keep), e['mtime']), reverse=True)
             out.append({'header': T(key).format(n, items[0]['name'], len(items)), 'items': items})
         return out
 
@@ -1271,10 +1448,51 @@ def run_scan(mode, root, sims_only, exts, T, progress=lambda text: None):
             groups.append({'header': T('depthPkg'), 'items': packages})
         count = len(scripts) + len(packages)
         msg = T('depthNone') if not count else T('depthFound').format(count, T('btnMove'))
+
+    elif mode == MODE_BROKEN:
+        cats = {k: [] for k in ('oldGame', 'brokenPkg', 'brokenScript')}
+        mods = [f for f in files if os.path.splitext(f['name'])[1].lower() in SIMS_EXTS]
+        for i, f in enumerate(mods, 1):
+            if i % 50 == 0:
+                progress(T('checking').format(i, len(mods)))
+            problem = mod_problem(f['path'])
+            if problem:
+                cats[problem].append(f)
+        count = 0
+        for k in ('oldGame', 'brokenPkg', 'brokenScript'):
+            items = sorted(cats[k], key=lambda e: e['path'].lower())
+            if items:
+                groups.append({'header': T('groupFolder').format(T(k), len(items)), 'items': items})
+                count += len(items)
+        msg = T('brokenNone').format(len(mods)) if not count else T('brokenFound').format(count)
+
+    elif mode == MODE_ERRORS:
+        sims = find_sims_folder(root)
+        if not sims:
+            return {'groups': [], 'msg': T('simsNotFound'), 'warn': False}
+        items = []
+        try:
+            for n in os.listdir(sims):
+                low = n.lower()
+                full = os.path.join(sims, n)
+                if low.startswith('last') and 'exception' in low and low.endswith('.txt') and os.path.isfile(full):
+                    st = os.stat(full)
+                    items.append(make_entry(full, st.st_size, st.st_mtime))
+        except OSError:
+            pass
+        items.sort(key=lambda e: e['mtime'], reverse=True)
+        root = sims   # the Folder column is shown relative to the Sims 4 folder
+        if items:
+            groups.append({'header': T('errGroup').format(sims, len(items)), 'items': items})
+            msg = T('errFound').format(len(items))
+        else:
+            msg = T('errNone').format(sims)
     else:
         msg = ''
 
-    return {'groups': groups, 'msg': msg, 'warn': warn}
+    if bad:
+        msg += T('skippedFolders').format(len(bad))
+    return {'groups': groups, 'msg': msg, 'warn': warn, 'root': root}
 
 
 # =====================================================================
@@ -1362,23 +1580,59 @@ def move_to_trash(paths, progress=lambda done, total: None):
     return done
 
 
+def move_script_companions(script_path, target_dir):
+    """Script mods keep settings next to the script (e.g. MCCC's .cfg files).
+    Moves files with the same name and .cfg files along, so the mod keeps its settings."""
+    folder = os.path.dirname(script_path)
+    stem = os.path.splitext(os.path.basename(script_path))[0].lower()
+    try:
+        names = os.listdir(folder)
+    except OSError:
+        return
+    for n in names:
+        src = os.path.join(folder, n)
+        low_stem, ext = os.path.splitext(n.lower())
+        if not os.path.isfile(src) or ext in ('.package', '.ts4script'):
+            continue
+        if low_stem != stem and ext != '.cfg':
+            continue
+        dest = os.path.join(target_dir, n)
+        if os.path.lexists(dest):
+            continue
+        try:
+            shutil.move(src, dest)
+        except OSError:
+            pass
+
+
 def backup_folder(root, target, progress=lambda done, total: None):
     """Packs root with all subfolders into the ZIP file target. Returns (ok, failed)."""
     root = os.path.abspath(root).rstrip(os.sep) or os.sep
-    files, _dirs, _bad = collect(root)
+    files, _dirs, bad = collect(root)
     base = os.path.basename(root) or 'Backup'
     ok = failed = 0
-    with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=1, allowZip64=True) as z:
-        for i, f in enumerate(files, 1):
-            rel = os.path.relpath(f['path'], root).replace(os.sep, '/')
-            try:
-                z.write(f['path'], base + '/' + rel)
-                ok += 1
-            except OSError:
-                failed += 1
-            if i % 20 == 0:
-                progress(i, len(files))
-    return ok, failed
+    try:
+        # strict_timestamps=False: files dated before 1980 are stored with 1980
+        # instead of stopping the whole backup
+        with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=1,
+                             allowZip64=True, strict_timestamps=False) as z:
+            for i, f in enumerate(files, 1):
+                rel = os.path.relpath(f['path'], root).replace(os.sep, '/')
+                try:
+                    z.write(f['path'], base + '/' + rel)
+                    ok += 1
+                except (OSError, ValueError):
+                    failed += 1
+                if i % 20 == 0:
+                    progress(i, len(files))
+    except Exception:
+        # Never leave a half written backup behind
+        try:
+            os.remove(target)
+        except OSError:
+            pass
+        raise
+    return ok, failed, len(bad)
 
 
 def show_in_folder(path):
@@ -1419,6 +1673,7 @@ def run_gui():
             self.checked = set()    # iids
             self.groups = []        # [{'header', 'iids'}]
             self.last_mode = -1
+            self.scan_root = None   # folder of the last search, for the Folder column
             self.sort_col = None
             self.sort_asc = True
             self.busy = False
@@ -1696,7 +1951,7 @@ def run_gui():
 
         def render(self):
             self.tree.delete(*self.tree.get_children())
-            root_path = self.var_folder.get().strip()
+            root_path = self.scan_root or self.var_folder.get().strip()
             main = self.T('mainFolder')
             for gi, g in enumerate(self.groups):
                 giid = 'g%d' % gi
@@ -1717,8 +1972,9 @@ def run_gui():
                         '☑' if iid in self.checked else '☐', e['name'],
                         rel_dir(e['dir'], root_path, main), size, self.date_text(e['mtime'])))
 
-        def refresh_marks(self):
-            for iid in self.entries:
+        def refresh_marks(self, iids=None):
+            # Only the rows that changed, so clicks stay fast on long lists
+            for iid in (self.entries if iids is None else iids):
                 if self.tree.exists(iid):
                     self.tree.set(iid, 'mark', '☑' if iid in self.checked else '☐')
 
@@ -1733,7 +1989,7 @@ def run_gui():
                 self.checked.discard(iid)
             else:
                 self.checked.add(iid)
-            self.refresh_marks()
+            self.refresh_marks(self.groups[int(iid[1:])]['iids'] if iid.startswith('g') else [iid])
 
         def on_click(self, event):
             iid = self.tree.identify_row(event.y)
@@ -1812,6 +2068,7 @@ def run_gui():
                         iids.append(iid)
                     self.groups.append({'header': g['header'], 'iids': iids})
                 self.last_mode = mode
+                self.scan_root = result.get('root')
                 self.btn_auto.state(['!disabled'] if mode in DUP_MODES else ['disabled'])
                 self.btn_move.state(['!disabled'] if mode == MODE_DEPTH else ['disabled'])
                 self.render()
@@ -1851,7 +2108,8 @@ def run_gui():
                     else:
                         self.checked.add(iid)
             self.refresh_marks()
-            self.status.configure(text=self.T('autoMarked').format(len(self.checked)))
+            key = 'autoMarkedVer' if self.last_mode == MODE_VERSION else 'autoMarked'
+            self.status.configure(text=self.T(key).format(len(self.checked)))
 
         def mark_all(self):
             self.checked = set(self.entries)
@@ -1938,6 +2196,9 @@ def run_gui():
                     moved.append(i)
                 except OSError:
                     skipped += 1
+                    continue
+                if e['name'].lower().endswith('.ts4script'):
+                    move_script_companions(e['path'], e['target'])
             self.remove_entries(moved)
             msg = self.T('moved').format(len(moved))
             if skipped:
@@ -1957,7 +2218,7 @@ def run_gui():
             if not path:
                 return
             T = self.T
-            root_path = self.var_folder.get().strip()
+            root_path = self.scan_root or self.var_folder.get().strip()
             try:
                 with open(path, 'w', newline='', encoding='utf-8-sig') as f:
                     # English Excel expects commas, most other languages semicolons
@@ -1966,7 +2227,9 @@ def run_gui():
                     for g in self.groups:
                         for i in g['iids']:
                             e = self.entries[i]
-                            w.writerow([g['header'], T('csvYes') if i in self.checked else '', e['name'],
+                            # A name starting with = + - @ would be run as a formula by Excel
+                            safe = "'" + e['name'] if e['name'][:1] in '=+-@' else e['name']
+                            w.writerow([g['header'], T('csvYes') if i in self.checked else '', safe,
                                         rel_dir(e['dir'], root_path, T('mainFolder')),
                                         T('folderItem') if e['is_folder'] else format_size(e['size']),
                                         self.date_text(e['mtime']), e['path']])
@@ -2012,7 +2275,7 @@ def run_gui():
                 self._progress = T('backingUp').format(done_count, total)
 
             def done(result):
-                ok, failed = result
+                ok, failed, skipped = result
                 try:
                     size = format_size(os.path.getsize(target))
                 except OSError:
@@ -2020,6 +2283,8 @@ def run_gui():
                 msg = self.T('backupDone').format(target, ok, size)
                 if failed:
                     msg += self.T('backupFail').format(failed)
+                if skipped:
+                    msg += self.T('skippedFolders').format(skipped)
                 self.status.configure(text=msg)
 
             self.status.configure(text=self.T('collecting'))
