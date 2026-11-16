@@ -78,10 +78,10 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 * ModSweep was made with the help of an AI assistant (Claude by Anthropic).
 * Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scans of version 1.2.0:
+VirusTotal scans of version 1.2.0, no security vendor flagged either file:
 
-* Windows ZIP: [full report](https://www.virustotal.com/gui/file/d30ea6cafc6d7e7e6a25ffcc06ce80a394033712018770321736dc085700fd58)
-* Mac and Linux ZIP: [full report](https://www.virustotal.com/gui/file/1cca5cb77544cabb25808e36b6374aed3f50e1b4cd30a452b9308bf5864faf73)
+* Windows ZIP: **0 of 63** ([full report](https://www.virustotal.com/gui/file/d30ea6cafc6d7e7e6a25ffcc06ce80a394033712018770321736dc085700fd58))
+* Mac and Linux ZIP: **0 of 64** ([full report](https://www.virustotal.com/gui/file/1cca5cb77544cabb25808e36b6374aed3f50e1b4cd30a452b9308bf5864faf73))
 
 
 ## FAQ
