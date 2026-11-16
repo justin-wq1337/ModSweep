@@ -1,7 +1,7 @@
 ﻿=====================================================================
   ModSweep for The Sims 4
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Version 1.2.0, created by Justinimini
+  Version 1.2.1, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -135,6 +135,17 @@ At the bottom right you can choose the look:
   * Theme: Light
   * Theme: Dark
 ModSweep remembers your choice.
+
+UPDATES
+*******
+
+On the first start ModSweep asks if it should look for new versions.
+If you say yes, it asks GitHub for the newest version number each
+time it starts. No data about you or your mods is sent, and nothing
+is downloaded or installed on its own. If there is a new version,
+ModSweep asks you and opens the download page in your browser.
+At the bottom right you can switch this on or off, or choose
+"Check for updates".
 
 
 GOOD TO KNOW
@@ -320,6 +331,17 @@ Unten rechts wählst du das Aussehen:
   * Design: Hell
   * Design: Dunkel
 ModSweep merkt sich deine Auswahl.
+
+UPDATES
+*******
+
+Beim ersten Start fragt ModSweep, ob es nach neuen Versionen suchen
+soll. Wenn du zustimmst, fragt es bei jedem Start bei GitHub nach der
+neuesten Versionsnummer. Es werden keine Daten über dich oder deine
+Mods gesendet, und es wird nichts von selbst heruntergeladen oder
+installiert. Gibt es eine neue Version, fragt ModSweep dich und öffnet
+die Download-Seite in deinem Browser. Unten rechts kannst du das ein-
+oder ausschalten oder "Jetzt prüfen" wählen.
 
 
 GUT ZU WISSEN

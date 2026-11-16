@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import struct
+import urllib.request
 import subprocess
 import sys
 import threading
@@ -25,7 +26,7 @@ import webbrowser
 import zipfile
 
 IS_MAC = sys.platform == 'darwin'
-APP_VERSION = '1.2.0'
+APP_VERSION = '1.2.1'
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 LANG_CODES = ['en', 'de', 'es', 'fr', 'pl', 'pt']
@@ -91,7 +92,7 @@ LANG = json.loads(r'''{
   "nameNone": "No duplicate file names found ({0} files checked).",
   "nameFound": "{0} file names occur more than once. Note: the content may differ.",
   "verNone": "No mods with several versions found.",
-  "verFound": "{0} mods exist in several versions. The newest file is listed first. Please check before deleting.",
+  "verFound": "{0} mods exist in several versions. The highest version is listed first. Please check before deleting.",
   "typeNone": "No files of type {0} found.",
   "typeFound": "{0} files of type {1} found in {2} folders, {3} in total.",
   "junkEmpty": "Empty files (0 bytes)",
@@ -174,7 +175,16 @@ LANG = json.loads(r'''{
   "checking": "Checking files: {0} of {1} ...",
   "errGroup": "Error reports in {0}  ({1} files)",
   "errNone": "No error reports found in {0}.",
-  "errFound": "{0} error reports found. Open one in a text editor to see which mod is mentioned."
+  "errFound": "{0} error reports found. Open one in a text editor to see which mod is mentioned.",
+  "updTitle": "Updates",
+  "updAsk": "Should ModSweep check for a new version each time it starts?{0}{0}It only asks GitHub for the newest version number. No data about you or your mods is sent. You can change this at the bottom right at any time.",
+  "updFound": "ModSweep {0} is available. You have version {1}.{2}{2}Open the download page now?",
+  "updNone": "You have the newest version of ModSweep ({0}).",
+  "updFail": "Could not check for updates. Please check your internet connection, or look on the GitHub page.",
+  "updOn": "Updates: on",
+  "updOff": "Updates: off",
+  "updCheck": "Check for updates",
+  "updChecking": "Checking for updates ..."
  },
  "de": {
   "modes": [
@@ -235,7 +245,7 @@ LANG = json.loads(r'''{
   "nameNone": "Keine doppelten Dateinamen gefunden ({0} Dateien geprüft).",
   "nameFound": "{0} Dateinamen kommen mehrfach vor. Achtung: Der Inhalt kann unterschiedlich sein.",
   "verNone": "Keine Mods mit mehreren Versionen gefunden.",
-  "verFound": "{0} Mods liegen in mehreren Versionen vor. Oben steht jeweils die neueste Datei. Bitte vor dem Löschen prüfen.",
+  "verFound": "{0} Mods liegen in mehreren Versionen vor. Oben steht jeweils die höchste Version. Bitte vor dem Löschen prüfen.",
   "typeNone": "Keine Dateien vom Typ {0} gefunden.",
   "typeFound": "{0} Dateien vom Typ {1} in {2} Ordnern gefunden, zusammen {3}.",
   "junkEmpty": "Leere Dateien (0 Byte)",
@@ -318,7 +328,16 @@ LANG = json.loads(r'''{
   "checking": "Prüfe Dateien: {0} von {1} ...",
   "errGroup": "Fehlerberichte in {0}  ({1} Dateien)",
   "errNone": "Keine Fehlerberichte gefunden in {0}.",
-  "errFound": "{0} Fehlerberichte gefunden. Öffne einen in einem Texteditor, um zu sehen, welcher Mod genannt wird."
+  "errFound": "{0} Fehlerberichte gefunden. Öffne einen in einem Texteditor, um zu sehen, welcher Mod genannt wird.",
+  "updTitle": "Updates",
+  "updAsk": "Soll ModSweep bei jedem Start nach einer neuen Version suchen?{0}{0}Dabei fragt ModSweep nur bei GitHub nach der neuesten Versionsnummer. Es werden keine Daten über dich oder deine Mods gesendet. Du kannst das jederzeit unten rechts ändern.",
+  "updFound": "ModSweep {0} ist verfügbar. Du hast Version {1}.{2}{2}Download-Seite jetzt öffnen?",
+  "updNone": "Du hast die neueste Version von ModSweep ({0}).",
+  "updFail": "Die Suche nach Updates hat nicht geklappt. Bitte prüfe deine Internetverbindung oder schau auf der GitHub-Seite nach.",
+  "updOn": "Updates: an",
+  "updOff": "Updates: aus",
+  "updCheck": "Jetzt prüfen",
+  "updChecking": "Suche nach Updates ..."
  },
  "es": {
   "modes": [
@@ -379,7 +398,7 @@ LANG = json.loads(r'''{
   "nameNone": "No se encontraron nombres repetidos ({0} archivos revisados).",
   "nameFound": "{0} nombres de archivo aparecen más de una vez. Ojo: el contenido puede ser diferente.",
   "verNone": "No se encontraron mods con varias versiones.",
-  "verFound": "{0} mods tienen varias versiones. El archivo más nuevo aparece arriba. Revísalos antes de borrar.",
+  "verFound": "{0} mods tienen varias versiones. La versión más alta aparece arriba. Revísalos antes de borrar.",
   "typeNone": "No se encontraron archivos del tipo {0}.",
   "typeFound": "{0} archivos del tipo {1} encontrados en {2} carpetas, {3} en total.",
   "junkEmpty": "Archivos vacíos (0 bytes)",
@@ -462,7 +481,16 @@ LANG = json.loads(r'''{
   "checking": "Revisando archivos: {0} de {1} ...",
   "errGroup": "Informes de error en {0}  ({1} archivos)",
   "errNone": "No se encontraron informes de error en {0}.",
-  "errFound": "Se encontraron {0} informes de error. Abre uno con un editor de texto para ver qué mod aparece."
+  "errFound": "Se encontraron {0} informes de error. Abre uno con un editor de texto para ver qué mod aparece.",
+  "updTitle": "Actualizaciones",
+  "updAsk": "¿Quieres que ModSweep busque una versión nueva cada vez que se inicie?{0}{0}Solo pregunta a GitHub por el número de la versión más reciente. No se envía ningún dato sobre ti ni sobre tus mods. Puedes cambiarlo abajo a la derecha cuando quieras.",
+  "updFound": "ModSweep {0} está disponible. Tienes la versión {1}.{2}{2}¿Abrir ahora la página de descarga?",
+  "updNone": "Tienes la versión más reciente de ModSweep ({0}).",
+  "updFail": "No se pudo buscar actualizaciones. Revisa tu conexión a internet o mira en la página de GitHub.",
+  "updOn": "Actualizaciones: sí",
+  "updOff": "Actualizaciones: no",
+  "updCheck": "Buscar ahora",
+  "updChecking": "Buscando actualizaciones ..."
  },
  "fr": {
   "modes": [
@@ -523,7 +551,7 @@ LANG = json.loads(r'''{
   "nameNone": "Aucun nom de fichier en double ({0} fichiers vérifiés).",
   "nameFound": "{0} noms de fichiers apparaissent plusieurs fois. Attention : le contenu peut différer.",
   "verNone": "Aucun mod en plusieurs versions trouvé.",
-  "verFound": "{0} mods existent en plusieurs versions. Le fichier le plus récent est en haut. Vérifiez avant de supprimer.",
+  "verFound": "{0} mods existent en plusieurs versions. La version la plus haute est en haut. Vérifiez avant de supprimer.",
   "typeNone": "Aucun fichier de type {0} trouvé.",
   "typeFound": "{0} fichiers de type {1} trouvés dans {2} dossiers, {3} au total.",
   "junkEmpty": "Fichiers vides (0 octet)",
@@ -606,7 +634,16 @@ LANG = json.loads(r'''{
   "checking": "Vérification des fichiers : {0} sur {1} ...",
   "errGroup": "Rapports d'erreur dans {0}  ({1} fichiers)",
   "errNone": "Aucun rapport d'erreur trouvé dans {0}.",
-  "errFound": "{0} rapports d'erreur trouvés. Ouvre-en un avec un éditeur de texte pour voir quel mod est cité."
+  "errFound": "{0} rapports d'erreur trouvés. Ouvre-en un avec un éditeur de texte pour voir quel mod est cité.",
+  "updTitle": "Mises à jour",
+  "updAsk": "ModSweep doit-il chercher une nouvelle version à chaque démarrage ?{0}{0}Il demande seulement à GitHub le numéro de la dernière version. Aucune donnée sur toi ou tes mods n'est envoyée. Tu peux changer cela en bas à droite à tout moment.",
+  "updFound": "ModSweep {0} est disponible. Tu as la version {1}.{2}{2}Ouvrir la page de téléchargement maintenant ?",
+  "updNone": "Tu as la dernière version de ModSweep ({0}).",
+  "updFail": "Impossible de chercher les mises à jour. Vérifie ta connexion internet ou regarde sur la page GitHub.",
+  "updOn": "Mises à jour : oui",
+  "updOff": "Mises à jour : non",
+  "updCheck": "Vérifier maintenant",
+  "updChecking": "Recherche de mises à jour ..."
  },
  "pl": {
   "modes": [
@@ -667,7 +704,7 @@ LANG = json.loads(r'''{
   "nameNone": "Nie znaleziono powtarzających się nazw (sprawdzono plików: {0}).",
   "nameFound": "Nazwy plików występujące wielokrotnie: {0}. Uwaga: zawartość może się różnić.",
   "verNone": "Nie znaleziono modów w kilku wersjach.",
-  "verFound": "Mody w kilku wersjach: {0}. Najnowszy plik jest na górze. Sprawdź przed usunięciem.",
+  "verFound": "Mody w kilku wersjach: {0}. Najwyższa wersja jest na górze. Sprawdź przed usunięciem.",
   "typeNone": "Nie znaleziono plików typu {0}.",
   "typeFound": "Znaleziono plików typu {1}: {0} w folderach: {2}, łącznie {3}.",
   "junkEmpty": "Puste pliki (0 bajtów)",
@@ -750,7 +787,16 @@ LANG = json.loads(r'''{
   "checking": "Sprawdzanie plików: {0} z {1} ...",
   "errGroup": "Raporty błędów w {0}  (plików: {1})",
   "errNone": "Nie znaleziono raportów błędów w {0}.",
-  "errFound": "Znaleziono raporty błędów: {0}. Otwórz jeden w edytorze tekstu, aby zobaczyć, który mod jest w nim wymieniony."
+  "errFound": "Znaleziono raporty błędów: {0}. Otwórz jeden w edytorze tekstu, aby zobaczyć, który mod jest w nim wymieniony.",
+  "updTitle": "Aktualizacje",
+  "updAsk": "Czy ModSweep ma sprawdzać nową wersję przy każdym uruchomieniu?{0}{0}Program pyta GitHub tylko o numer najnowszej wersji. Żadne dane o Tobie ani Twoich modach nie są wysyłane. Możesz to zmienić w każdej chwili w prawym dolnym rogu.",
+  "updFound": "Dostępny jest ModSweep {0}. Masz wersję {1}.{2}{2}Otworzyć teraz stronę pobierania?",
+  "updNone": "Masz najnowszą wersję ModSweep ({0}).",
+  "updFail": "Nie udało się sprawdzić aktualizacji. Sprawdź połączenie z internetem lub zajrzyj na stronę GitHub.",
+  "updOn": "Aktualizacje: wł.",
+  "updOff": "Aktualizacje: wył.",
+  "updCheck": "Sprawdź teraz",
+  "updChecking": "Sprawdzanie aktualizacji ..."
  },
  "pt": {
   "modes": [
@@ -811,7 +857,7 @@ LANG = json.loads(r'''{
   "nameNone": "Nenhum nome de arquivo repetido ({0} arquivos verificados).",
   "nameFound": "{0} nomes de arquivo aparecem mais de uma vez. Atenção: o conteúdo pode ser diferente.",
   "verNone": "Nenhum mod com várias versões encontrado.",
-  "verFound": "{0} mods existem em várias versões. O arquivo mais novo aparece em cima. Confira antes de excluir.",
+  "verFound": "{0} mods existem em várias versões. A versão mais alta aparece em cima. Confira antes de excluir.",
   "typeNone": "Nenhum arquivo do tipo {0} encontrado.",
   "typeFound": "{0} arquivos do tipo {1} encontrados em {2} pastas, {3} no total.",
   "junkEmpty": "Arquivos vazios (0 bytes)",
@@ -894,7 +940,16 @@ LANG = json.loads(r'''{
   "checking": "Verificando arquivos: {0} de {1} ...",
   "errGroup": "Relatórios de erro em {0}  ({1} arquivos)",
   "errNone": "Nenhum relatório de erro encontrado em {0}.",
-  "errFound": "{0} relatórios de erro encontrados. Abra um em um editor de texto para ver qual mod é citado."
+  "errFound": "{0} relatórios de erro encontrados. Abra um em um editor de texto para ver qual mod é citado.",
+  "updTitle": "Atualizações",
+  "updAsk": "O ModSweep deve procurar uma nova versão sempre que for aberto?{0}{0}Ele só pergunta ao GitHub qual é o número da versão mais nova. Nenhum dado sobre você ou seus mods é enviado. Você pode mudar isso no canto inferior direito a qualquer momento.",
+  "updFound": "O ModSweep {0} está disponível. Você tem a versão {1}.{2}{2}Abrir a página de download agora?",
+  "updNone": "Você tem a versão mais nova do ModSweep ({0}).",
+  "updFail": "Não foi possível procurar atualizações. Verifique sua conexão com a internet ou veja a página do GitHub.",
+  "updOn": "Atualizações: sim",
+  "updOff": "Atualizações: não",
+  "updCheck": "Procurar agora",
+  "updChecking": "Procurando atualizações ..."
  }
 }''')
 
@@ -1009,6 +1064,80 @@ def save_theme(code):
             f.write(code)
     except OSError:
         pass
+
+
+# ----- update check -----
+# ModSweep only asks GitHub for the newest version number. Nothing is
+# downloaded or installed. If there is a newer version, ModSweep asks and
+# then opens the download page in the browser.
+RELEASES_URL = 'https://github.com/justin-wq1337/ModSweep/releases/latest'
+RELEASES_API = 'https://api.github.com/repos/justin-wq1337/ModSweep/releases/latest'
+
+
+def load_setting(name, allowed):
+    try:
+        with open(os.path.join(settings_dir(), name), encoding='utf-8') as f:
+            value = f.read().strip()
+        if allowed is None or value in allowed:
+            return value
+    except OSError:
+        pass
+    return None
+
+
+def save_setting(name, value):
+    try:
+        os.makedirs(settings_dir(), exist_ok=True)
+        with open(os.path.join(settings_dir(), name), 'w', encoding='utf-8') as f:
+            f.write(value)
+    except OSError:
+        pass
+
+
+def csv_safe(text):
+    """A cell starting with = + - @ would be run as a formula by Excel."""
+    return "'" + text if text[:1] in ('=', '+', '-', '@', '\t', '\r') else text
+
+
+def parse_version(text):
+    """'v1.2.1' -> (1, 2, 1). None if it is not a version number."""
+    m = re.match(r'^\s*v?(\d+(?:\.\d+){1,3})\s*$', text or '')
+    if not m:
+        return None
+    parts = [int(x) for x in m.group(1).split('.')]
+    return tuple(parts + [0] * (4 - len(parts)))
+
+
+def version_text(v):
+    """(1, 2, 1, 0) -> '1.2.1'"""
+    parts = list(v)
+    while len(parts) > 3 and parts[-1] == 0:
+        parts.pop()
+    return '.'.join(str(x) for x in parts)
+
+
+def fetch_latest_tag(timeout=10):
+    """Returns the tag of the newest release on GitHub, or None.
+    Uses Python first. Some Mac Pythons lack certificates, so curl
+    (which uses the system certificates) is tried as a second way."""
+    headers = {'User-Agent': 'ModSweep', 'Accept': 'application/vnd.github+json'}
+    try:
+        req = urllib.request.Request(RELEASES_API, headers=headers)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return str(json.loads(r.read().decode('utf-8')).get('tag_name') or '') or None
+    except Exception:
+        pass
+    curl = shutil.which('curl')
+    if curl:
+        try:
+            out = subprocess.run([curl, '-fsSL', '--max-time', str(timeout),
+                                  '-H', 'User-Agent: ModSweep', '-H', 'Accept: application/vnd.github+json',
+                                  RELEASES_API], capture_output=True, timeout=timeout + 5)
+            if out.returncode == 0:
+                return str(json.loads(out.stdout.decode('utf-8')).get('tag_name') or '') or None
+        except Exception:
+            pass
+    return None
 
 
 def system_is_dark():
@@ -1777,6 +1906,12 @@ def run_gui():
             self.btn_backup = ttk.Button(row2, command=self.backup_mods)
             for b in (self.btn_save, self.btn_move, self.btn_update, self.btn_cache, self.btn_backup):
                 b.pack(side='left', padx=(0, 6))
+            # Update check choice at the bottom right, below the theme: on, off, or check now
+            self.upd_mode = load_setting('update.txt', ('on', 'off'))
+            self.upd_running = False
+            self.cmb_upd = ttk.Combobox(row2, state='readonly', width=24)
+            self.cmb_upd.pack(side='right')
+            self.cmb_upd.bind('<<ComboboxSelected>>', self.change_update_mode)
             self.status = ttk.Label(bottom, anchor='w')
             self.status.pack(fill='x', pady=(6, 0))
 
@@ -1790,6 +1925,75 @@ def run_gui():
             self.apply_language(first=True)
             self.apply_theme()
             self.root.after(3000, self.watch_system_theme)
+            self.root.after(600, self.first_update_check)
+
+        # ----- update check -----
+        def show_update_mode(self):
+            self.cmb_upd.current(0 if self.upd_mode == 'on' else 1)
+
+        def first_update_check(self):
+            # First start: ask once. Later: check quietly if the user agreed.
+            if self.upd_mode is None:
+                self.upd_mode = 'on' if self.ask(self.T('updAsk').format('\n'), 'updTitle') else 'off'
+                save_setting('update.txt', self.upd_mode)
+                self.show_update_mode()
+            if self.upd_mode == 'on':
+                self.check_updates(manual=False)
+
+        def change_update_mode(self, event=None):
+            i = self.cmb_upd.current()
+            if i == 2:
+                # "Check now" is an action, not a setting: show the setting again and check
+                self.show_update_mode()
+                self.check_updates(manual=True)
+                return
+            self.upd_mode = 'on' if i == 0 else 'off'
+            save_setting('update.txt', self.upd_mode)
+
+        def check_updates(self, manual):
+            if self.upd_running:
+                return
+            self.upd_running = True
+            if manual:
+                self.status.configure(text=self.T('updChecking'))
+            box = {}
+
+            def work():
+                box['tag'] = fetch_latest_tag()
+
+            t = threading.Thread(target=work, daemon=True)
+            t.start()
+
+            def poll():
+                if t.is_alive():
+                    self.root.after(300, poll)
+                    return
+                self.upd_running = False
+                if manual and self.status.cget('text') == self.T('updChecking'):
+                    self.status.configure(text='')
+                self.update_result(box.get('tag'), manual)
+
+            self.root.after(300, poll)
+
+        def update_result(self, tag, manual):
+            latest = parse_version(tag)
+            current = parse_version(APP_VERSION)
+            if latest is None:
+                if manual:
+                    self.warn(self.T('updFail'))
+                return
+            if latest <= current:
+                if manual:
+                    self.info(self.T('updNone').format(APP_VERSION), 'updTitle')
+                return
+            new_text = version_text(latest)
+            # Do not ask again about a version the user already said "no" to
+            if not manual and load_setting('update-skip.txt', None) == new_text:
+                return
+            if self.ask(self.T('updFound').format(new_text, APP_VERSION, '\n'), 'updTitle'):
+                webbrowser.open(RELEASES_URL)   # always the fixed GitHub page, never a link from the internet
+            else:
+                save_setting('update-skip.txt', new_text)
 
         # ----- light and dark mode -----
         def change_theme(self, event=None):
@@ -1889,6 +2093,8 @@ def run_gui():
             self.cmb_mode.current(sel)
             self.cmb_theme.configure(values=[T('themeSystem'), T('themeLight'), T('themeDark')])
             self.cmb_theme.current(THEME_CODES.index(self.theme))
+            self.cmb_upd.configure(values=[T('updOn'), T('updOff'), T('updCheck')])
+            self.show_update_mode()
             self.update_mode_controls()
             if self.groups:
                 self.render()
@@ -2228,9 +2434,9 @@ def run_gui():
                         for i in g['iids']:
                             e = self.entries[i]
                             # A name starting with = + - @ would be run as a formula by Excel
-                            safe = "'" + e['name'] if e['name'][:1] in '=+-@' else e['name']
+                            safe = csv_safe(e['name'])
                             w.writerow([g['header'], T('csvYes') if i in self.checked else '', safe,
-                                        rel_dir(e['dir'], root_path, T('mainFolder')),
+                                        csv_safe(rel_dir(e['dir'], root_path, T('mainFolder'))),
                                         T('folderItem') if e['is_folder'] else format_size(e['size']),
                                         self.date_text(e['mtime']), e['path']])
                 self.status.configure(text=T('saved').format(path))

@@ -204,7 +204,7 @@ $Lang['en'] = @{
     nameNone = 'No duplicate file names found ({0} files checked).'
     nameFound = '{0} file names occur more than once. Note: the content may differ.'
     verNone = 'No mods with several versions found.'
-    verFound = '{0} mods exist in several versions. The newest file is listed first. Please check before deleting.'
+    verFound = '{0} mods exist in several versions. The highest version is listed first. Please check before deleting.'
     typeNone = 'No files of type {0} found.'
     typeFound = '{0} files of type {1} found in {2} folders, {3} in total.'
     junkEmpty = 'Empty files (0 bytes)'; junkArchive = 'Archives (.zip, .rar, .7z)'; junkText = 'Texts and readmes'
@@ -273,6 +273,15 @@ $Lang['en'] = @{
     errGroup = 'Error reports in {0}  ({1} files)'
     errNone = 'No error reports found in {0}.'
     errFound = '{0} error reports found. Open one in a text editor to see which mod is mentioned.'
+    updTitle = 'Updates'
+    updAsk = 'Should ModSweep check for a new version each time it starts?{0}{0}It only asks GitHub for the newest version number. No data about you or your mods is sent. You can change this at the bottom right at any time.'
+    updFound = 'ModSweep {0} is available. You have version {1}.{2}{2}Open the download page now?'
+    updNone = 'You have the newest version of ModSweep ({0}).'
+    updFail = 'Could not check for updates. Please check your internet connection, or look on the GitHub page.'
+    updOn = 'Updates: on'
+    updOff = 'Updates: off'
+    updCheck = 'Check for updates'
+    updChecking = 'Checking for updates ...'
 }
 
 $Lang['de'] = @{
@@ -316,7 +325,7 @@ $Lang['de'] = @{
     nameNone = 'Keine doppelten Dateinamen gefunden ({0} Dateien geprüft).'
     nameFound = '{0} Dateinamen kommen mehrfach vor. Achtung: Der Inhalt kann unterschiedlich sein.'
     verNone = 'Keine Mods mit mehreren Versionen gefunden.'
-    verFound = '{0} Mods liegen in mehreren Versionen vor. Oben steht jeweils die neueste Datei. Bitte vor dem Löschen prüfen.'
+    verFound = '{0} Mods liegen in mehreren Versionen vor. Oben steht jeweils die höchste Version. Bitte vor dem Löschen prüfen.'
     typeNone = 'Keine Dateien vom Typ {0} gefunden.'
     typeFound = '{0} Dateien vom Typ {1} in {2} Ordnern gefunden, zusammen {3}.'
     junkEmpty = 'Leere Dateien (0 Byte)'; junkArchive = 'Archive (.zip, .rar, .7z)'; junkText = 'Texte und Anleitungen'
@@ -385,6 +394,15 @@ $Lang['de'] = @{
     errGroup = 'Fehlerberichte in {0}  ({1} Dateien)'
     errNone = 'Keine Fehlerberichte gefunden in {0}.'
     errFound = '{0} Fehlerberichte gefunden. Öffne einen in einem Texteditor, um zu sehen, welcher Mod genannt wird.'
+    updTitle = 'Updates'
+    updAsk = 'Soll ModSweep bei jedem Start nach einer neuen Version suchen?{0}{0}Dabei fragt ModSweep nur bei GitHub nach der neuesten Versionsnummer. Es werden keine Daten über dich oder deine Mods gesendet. Du kannst das jederzeit unten rechts ändern.'
+    updFound = 'ModSweep {0} ist verfügbar. Du hast Version {1}.{2}{2}Download-Seite jetzt öffnen?'
+    updNone = 'Du hast die neueste Version von ModSweep ({0}).'
+    updFail = 'Die Suche nach Updates hat nicht geklappt. Bitte prüfe deine Internetverbindung oder schau auf der GitHub-Seite nach.'
+    updOn = 'Updates: an'
+    updOff = 'Updates: aus'
+    updCheck = 'Jetzt prüfen'
+    updChecking = 'Suche nach Updates ...'
 }
 
 $Lang['es'] = @{
@@ -428,7 +446,7 @@ $Lang['es'] = @{
     nameNone = 'No se encontraron nombres repetidos ({0} archivos revisados).'
     nameFound = '{0} nombres de archivo aparecen más de una vez. Ojo: el contenido puede ser diferente.'
     verNone = 'No se encontraron mods con varias versiones.'
-    verFound = '{0} mods tienen varias versiones. El archivo más nuevo aparece arriba. Revísalos antes de borrar.'
+    verFound = '{0} mods tienen varias versiones. La versión más alta aparece arriba. Revísalos antes de borrar.'
     typeNone = 'No se encontraron archivos del tipo {0}.'
     typeFound = '{0} archivos del tipo {1} encontrados en {2} carpetas, {3} en total.'
     junkEmpty = 'Archivos vacíos (0 bytes)'; junkArchive = 'Comprimidos (.zip, .rar, .7z)'; junkText = 'Textos y léeme'
@@ -497,6 +515,15 @@ $Lang['es'] = @{
     errGroup = 'Informes de error en {0}  ({1} archivos)'
     errNone = 'No se encontraron informes de error en {0}.'
     errFound = 'Se encontraron {0} informes de error. Abre uno con un editor de texto para ver qué mod aparece.'
+    updTitle = 'Actualizaciones'
+    updAsk = '¿Quieres que ModSweep busque una versión nueva cada vez que se inicie?{0}{0}Solo pregunta a GitHub por el número de la versión más reciente. No se envía ningún dato sobre ti ni sobre tus mods. Puedes cambiarlo abajo a la derecha cuando quieras.'
+    updFound = 'ModSweep {0} está disponible. Tienes la versión {1}.{2}{2}¿Abrir ahora la página de descarga?'
+    updNone = 'Tienes la versión más reciente de ModSweep ({0}).'
+    updFail = 'No se pudo buscar actualizaciones. Revisa tu conexión a internet o mira en la página de GitHub.'
+    updOn = 'Actualizaciones: sí'
+    updOff = 'Actualizaciones: no'
+    updCheck = 'Buscar ahora'
+    updChecking = 'Buscando actualizaciones ...'
 }
 
 $Lang['fr'] = @{
@@ -540,7 +567,7 @@ $Lang['fr'] = @{
     nameNone = 'Aucun nom de fichier en double ({0} fichiers vérifiés).'
     nameFound = '{0} noms de fichiers apparaissent plusieurs fois. Attention : le contenu peut différer.'
     verNone = 'Aucun mod en plusieurs versions trouvé.'
-    verFound = '{0} mods existent en plusieurs versions. Le fichier le plus récent est en haut. Vérifiez avant de supprimer.'
+    verFound = '{0} mods existent en plusieurs versions. La version la plus haute est en haut. Vérifiez avant de supprimer.'
     typeNone = 'Aucun fichier de type {0} trouvé.'
     typeFound = '{0} fichiers de type {1} trouvés dans {2} dossiers, {3} au total.'
     junkEmpty = 'Fichiers vides (0 octet)'; junkArchive = 'Archives (.zip, .rar, .7z)'; junkText = 'Textes et readme'
@@ -609,6 +636,15 @@ $Lang['fr'] = @{
     errGroup = 'Rapports d''erreur dans {0}  ({1} fichiers)'
     errNone = 'Aucun rapport d''erreur trouvé dans {0}.'
     errFound = '{0} rapports d''erreur trouvés. Ouvre-en un avec un éditeur de texte pour voir quel mod est cité.'
+    updTitle = 'Mises à jour'
+    updAsk = 'ModSweep doit-il chercher une nouvelle version à chaque démarrage ?{0}{0}Il demande seulement à GitHub le numéro de la dernière version. Aucune donnée sur toi ou tes mods n''est envoyée. Tu peux changer cela en bas à droite à tout moment.'
+    updFound = 'ModSweep {0} est disponible. Tu as la version {1}.{2}{2}Ouvrir la page de téléchargement maintenant ?'
+    updNone = 'Tu as la dernière version de ModSweep ({0}).'
+    updFail = 'Impossible de chercher les mises à jour. Vérifie ta connexion internet ou regarde sur la page GitHub.'
+    updOn = 'Mises à jour : oui'
+    updOff = 'Mises à jour : non'
+    updCheck = 'Vérifier maintenant'
+    updChecking = 'Recherche de mises à jour ...'
 }
 
 $Lang['pl'] = @{
@@ -652,7 +688,7 @@ $Lang['pl'] = @{
     nameNone = 'Nie znaleziono powtarzających się nazw (sprawdzono plików: {0}).'
     nameFound = 'Nazwy plików występujące wielokrotnie: {0}. Uwaga: zawartość może się różnić.'
     verNone = 'Nie znaleziono modów w kilku wersjach.'
-    verFound = 'Mody w kilku wersjach: {0}. Najnowszy plik jest na górze. Sprawdź przed usunięciem.'
+    verFound = 'Mody w kilku wersjach: {0}. Najwyższa wersja jest na górze. Sprawdź przed usunięciem.'
     typeNone = 'Nie znaleziono plików typu {0}.'
     typeFound = 'Znaleziono plików typu {1}: {0} w folderach: {2}, łącznie {3}.'
     junkEmpty = 'Puste pliki (0 bajtów)'; junkArchive = 'Archiwa (.zip, .rar, .7z)'; junkText = 'Teksty i instrukcje'
@@ -721,6 +757,15 @@ $Lang['pl'] = @{
     errGroup = 'Raporty błędów w {0}  (plików: {1})'
     errNone = 'Nie znaleziono raportów błędów w {0}.'
     errFound = 'Znaleziono raporty błędów: {0}. Otwórz jeden w edytorze tekstu, aby zobaczyć, który mod jest w nim wymieniony.'
+    updTitle = 'Aktualizacje'
+    updAsk = 'Czy ModSweep ma sprawdzać nową wersję przy każdym uruchomieniu?{0}{0}Program pyta GitHub tylko o numer najnowszej wersji. Żadne dane o Tobie ani Twoich modach nie są wysyłane. Możesz to zmienić w każdej chwili w prawym dolnym rogu.'
+    updFound = 'Dostępny jest ModSweep {0}. Masz wersję {1}.{2}{2}Otworzyć teraz stronę pobierania?'
+    updNone = 'Masz najnowszą wersję ModSweep ({0}).'
+    updFail = 'Nie udało się sprawdzić aktualizacji. Sprawdź połączenie z internetem lub zajrzyj na stronę GitHub.'
+    updOn = 'Aktualizacje: wł.'
+    updOff = 'Aktualizacje: wył.'
+    updCheck = 'Sprawdź teraz'
+    updChecking = 'Sprawdzanie aktualizacji ...'
 }
 
 $Lang['pt'] = @{
@@ -764,7 +809,7 @@ $Lang['pt'] = @{
     nameNone = 'Nenhum nome de arquivo repetido ({0} arquivos verificados).'
     nameFound = '{0} nomes de arquivo aparecem mais de uma vez. Atenção: o conteúdo pode ser diferente.'
     verNone = 'Nenhum mod com várias versões encontrado.'
-    verFound = '{0} mods existem em várias versões. O arquivo mais novo aparece em cima. Confira antes de excluir.'
+    verFound = '{0} mods existem em várias versões. A versão mais alta aparece em cima. Confira antes de excluir.'
     typeNone = 'Nenhum arquivo do tipo {0} encontrado.'
     typeFound = '{0} arquivos do tipo {1} encontrados em {2} pastas, {3} no total.'
     junkEmpty = 'Arquivos vazios (0 bytes)'; junkArchive = 'Compactados (.zip, .rar, .7z)'; junkText = 'Textos e leia-me'
@@ -833,6 +878,15 @@ $Lang['pt'] = @{
     errGroup = 'Relatórios de erro em {0}  ({1} arquivos)'
     errNone = 'Nenhum relatório de erro encontrado em {0}.'
     errFound = '{0} relatórios de erro encontrados. Abra um em um editor de texto para ver qual mod é citado.'
+    updTitle = 'Atualizações'
+    updAsk = 'O ModSweep deve procurar uma nova versão sempre que for aberto?{0}{0}Ele só pergunta ao GitHub qual é o número da versão mais nova. Nenhum dado sobre você ou seus mods é enviado. Você pode mudar isso no canto inferior direito a qualquer momento.'
+    updFound = 'O ModSweep {0} está disponível. Você tem a versão {1}.{2}{2}Abrir a página de download agora?'
+    updNone = 'Você tem a versão mais nova do ModSweep ({0}).'
+    updFail = 'Não foi possível procurar atualizações. Verifique sua conexão com a internet ou veja a página do GitHub.'
+    updOn = 'Atualizações: sim'
+    updOff = 'Atualizações: não'
+    updCheck = 'Procurar agora'
+    updChecking = 'Procurando atualizações ...'
 }
 
 # Remember the chosen language between starts
@@ -864,6 +918,25 @@ $script:isDark = $false
 $script:fgColor = [System.Drawing.SystemColors]::ControlText
 $script:fgDim = [System.Drawing.Color]::FromArgb(150, 150, 150)
 
+# Update check: 'on', 'off', or not chosen yet (then ModSweep asks once)
+$updateFile = Join-Path $settingsDir 'update.txt'
+$updateSkipFile = Join-Path $settingsDir 'update-skip.txt'   # a version the user said "no" to
+$ReleasesUrl = 'https://github.com/justin-wq1337/ModSweep/releases/latest'
+$ReleasesApi = 'https://api.github.com/repos/justin-wq1337/ModSweep/releases/latest'
+$script:updMode = $null
+try {
+    if (Test-Path -LiteralPath $updateFile) {
+        $savedUpd = (Get-Content -LiteralPath $updateFile -ErrorAction Stop | Select-Object -First 1).Trim()
+        if ($savedUpd -in @('on', 'off')) { $script:updMode = $savedUpd }
+    }
+} catch { }
+function Save-Setting([string]$file, [string]$value) {
+    try {
+        if (-not (Test-Path -LiteralPath $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null }
+        Set-Content -LiteralPath $file -Value $value -ErrorAction Stop
+    } catch { }
+}
+
 # Remember the last folder that was searched
 $folderFile = Join-Path $settingsDir 'folder.txt'
 function Save-LastFolder([string]$path) {
@@ -890,7 +963,7 @@ function Ask-YesNo([string]$text, [string]$titleKey = 'tConfirm') {
 # =====================================================================
 # Helpers
 # =====================================================================
-$AppVersion = '1.2.0'
+$AppVersion = '1.2.1'
 $script:lastMode = -1
 $script:sorter = New-Object ModSorter
 
@@ -1187,6 +1260,14 @@ $cmbTheme = New-Object System.Windows.Forms.ComboBox
 $cmbTheme.DropDownStyle = 'DropDownList'
 $cmbTheme.Location = New-Object System.Drawing.Point(10, 10)
 $cmbTheme.Width = 170
+$cmbTheme.DropDownWidth = 230
+
+# Update check choice below the theme: on, off, or check now
+$cmbUpdate = New-Object System.Windows.Forms.ComboBox
+$cmbUpdate.DropDownStyle = 'DropDownList'
+$cmbUpdate.Location = New-Object System.Drawing.Point(10, 40)
+$cmbUpdate.Width = 170
+$cmbUpdate.DropDownWidth = 230
 
 $top.Controls.AddRange(@($lblHint, $lblFolder, $txtFolder, $btnBrowse, $lblMode, $cmbMode, $lblExt, $txtExt, $cmbLang, $chkSims, $btnScan))
 
@@ -1251,6 +1332,7 @@ $themePanel = New-Object System.Windows.Forms.Panel
 $themePanel.Dock = 'Right'
 $themePanel.Width = 185
 $themePanel.Controls.Add($cmbTheme)
+$themePanel.Controls.Add($cmbUpdate)
 
 $bottom.Controls.Add($flow)
 $bottom.Controls.Add($themePanel)
@@ -1275,7 +1357,7 @@ function Update-ListColumns {
 function Update-BottomLayout {
     $w = [Math]::Max(200, $bottom.ClientSize.Width - $themePanel.Width)
     $pref = $flow.GetPreferredSize((New-Object System.Drawing.Size($w, 0)))
-    $bottom.Height = $pref.Height + $status.Height + 6
+    $bottom.Height = [Math]::Max($pref.Height, 72) + $status.Height + 6   # room for both choices at the right
 }
 
 function Update-TopLayout {
@@ -1337,6 +1419,9 @@ function Apply-Language {
     $cmbTheme.Items.Clear()
     foreach ($k in @('themeSystem', 'themeLight', 'themeDark')) { $cmbTheme.Items.Add((T $k)) | Out-Null }
     $cmbTheme.SelectedIndex = [Array]::IndexOf($ThemeCodes, $script:theme)
+    $cmbUpdate.Items.Clear()
+    foreach ($k in @('updOn', 'updOff', 'updCheck')) { $cmbUpdate.Items.Add((T $k)) | Out-Null }
+    $cmbUpdate.SelectedIndex = $(if ($script:updMode -eq 'on') { 0 } else { 1 })
     $script:fillingTheme = $false
 
     Update-TopLayout
@@ -1380,7 +1465,7 @@ function Apply-Theme {
     $script:fieldColor = $field
     $script:selColor = $(if ($dark) { $Col::FromArgb(38, 79, 120) } else { [System.Drawing.SystemColors]::Highlight })
     $script:selText = $(if ($dark) { $fg } else { [System.Drawing.SystemColors]::HighlightText })
-    foreach ($c in @($cmbMode, $cmbLang, $cmbTheme)) {
+    foreach ($c in @($cmbMode, $cmbLang, $cmbTheme, $cmbUpdate)) {
         $c.FlatStyle = $(if ($dark) { 'Flat' } else { 'Standard' })
         $c.BackColor = $field; $c.ForeColor = $fg
         $c.Invalidate()
@@ -1946,7 +2031,7 @@ function Save-Report {
         $o[(T 'csvGroup')]  = $(if ($it.Group) { $it.Group.Header } else { '' })
         $o[(T 'csvMarked')] = $(if ($it.Checked) { T 'csvYes' } else { '' })
         $o[(T 'colName')]   = $(if ($it.Text -match '^[=+@\-]') { "'" + $it.Text } else { $it.Text })
-        $o[(T 'colFolder')] = $it.SubItems[1].Text
+        $o[(T 'colFolder')] = $(if ($it.SubItems[1].Text -match '^[=+@\-]') { "'" + $it.SubItems[1].Text } else { $it.SubItems[1].Text })
         $o[(T 'colSize')]   = $it.SubItems[2].Text
         $o[(T 'colDate')]   = $it.SubItems[3].Text
         $o[(T 'csvPath')]   = $it.Tag.Path
@@ -2003,7 +2088,7 @@ function Backup-Mods {
     if ($dlg.ShowDialog() -ne 'OK') { return }
     $target = $dlg.FileName
     # The backup must not be inside the folder it backs up
-    if ($target.StartsWith($root + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+    if ($target.StartsWith($root.TrimEnd('\') + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
         Show-Msg (T 'backupInside') 'tWarn' 'Warning'
         return
     }
@@ -2073,7 +2158,7 @@ $comboDraw = {
     $flags = [System.Windows.Forms.TextFormatFlags]::VerticalCenter -bor [System.Windows.Forms.TextFormatFlags]::Left -bor [System.Windows.Forms.TextFormatFlags]::EndEllipsis
     [System.Windows.Forms.TextRenderer]::DrawText($e.Graphics, [string]$s.Items[$e.Index], $s.Font, $r, $text, $flags)
 }
-foreach ($c in @($cmbMode, $cmbLang, $cmbTheme)) {
+foreach ($c in @($cmbMode, $cmbLang, $cmbTheme, $cmbUpdate)) {
     $c.DrawMode = [System.Windows.Forms.DrawMode]::OwnerDrawFixed
     $c.ItemHeight = 17
     $c.Add_DrawItem($comboDraw)
@@ -2183,6 +2268,105 @@ $miNsfw.Add_Click({
     Start-Process 'https://scarletsrealm.com/the-mod-list-sfw-nsfw-edition/'
     $status.Text = T 'updateOpened'
 })
+# =====================================================================
+# Update check
+# Asks GitHub only for the newest version number, in the background.
+# Nothing is downloaded or installed. If there is a newer version,
+# ModSweep asks and then opens the download page in the browser.
+# =====================================================================
+$script:updJob = $null
+$updTimer = New-Object System.Windows.Forms.Timer
+$updTimer.Interval = 300
+
+function Start-UpdateCheck([bool]$manual) {
+    if ($script:updJob) { return }
+    $ps = [PowerShell]::Create()
+    [void]$ps.AddScript({
+        param($url)
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        $r = Invoke-RestMethod -Uri $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop `
+            -Headers @{ 'User-Agent' = 'ModSweep'; 'Accept' = 'application/vnd.github+json' }
+        [string]$r.tag_name
+    }).AddArgument($ReleasesApi)
+    $script:updJob = @{ PS = $ps; Handle = $ps.BeginInvoke(); Manual = $manual }
+    if ($manual) { $status.Text = T 'updChecking' }
+    $updTimer.Start()
+}
+
+function Get-VersionFromTag([string]$tag) {
+    if ($tag -match '^\s*v?(\d+(?:\.\d+){1,3})\s*$') {
+        $p = @($Matches[1].Split('.') | ForEach-Object { [int]$_ })
+        while ($p.Count -lt 4) { $p += 0 }
+        try { return New-Object System.Version($p[0], $p[1], $p[2], $p[3]) } catch { }
+    }
+    return $null
+}
+
+$updTimer.Add_Tick({
+    $job = $script:updJob
+    if (-not $job -or -not $job.Handle.IsCompleted) { return }
+    $updTimer.Stop()
+    $script:updJob = $null
+    $tag = $null
+    try {
+        $out = $job.PS.EndInvoke($job.Handle)
+        if ($out.Count -gt 0) { $tag = [string]$out[$out.Count - 1] }
+    } catch { $tag = $null }
+    finally { $job.PS.Dispose() }
+    if ($job.Manual -and $status.Text -eq (T 'updChecking')) { $status.Text = '' }
+
+    $latest = Get-VersionFromTag $tag
+    if (-not $latest) {
+        if ($job.Manual) { Show-Msg (T 'updFail') 'updTitle' 'Warning' }
+        return
+    }
+    $current = Get-VersionFromTag $AppVersion
+    if ($latest -le $current) {
+        if ($job.Manual) { Show-Msg ((T 'updNone') -f $AppVersion) 'updTitle' 'Information' }
+        return
+    }
+    $newText = $(if ($latest.Revision -gt 0) { $latest.ToString(4) } else { $latest.ToString(3) })
+    if (-not $job.Manual) {
+        # Do not ask again about a version the user already said "no" to
+        try {
+            if ((Test-Path -LiteralPath $updateSkipFile) -and
+                ((Get-Content -LiteralPath $updateSkipFile -ErrorAction Stop | Select-Object -First 1).Trim() -eq $newText)) { return }
+        } catch { }
+    }
+    if (Ask-YesNo ((T 'updFound') -f $newText, $AppVersion, "`n") 'updTitle') {
+        Start-Process $ReleasesUrl   # always the fixed GitHub page, never a link from the internet
+    } else {
+        Save-Setting $updateSkipFile $newText
+    }
+})
+
+$cmbUpdate.Add_SelectedIndexChanged({
+    if ($script:fillingTheme -or $cmbUpdate.SelectedIndex -lt 0) { return }
+    if ($cmbUpdate.SelectedIndex -eq 2) {
+        # "Check now" is an action, not a setting: show the setting again and check
+        $script:fillingTheme = $true
+        $cmbUpdate.SelectedIndex = $(if ($script:updMode -eq 'on') { 0 } else { 1 })
+        $script:fillingTheme = $false
+        Start-UpdateCheck $true
+        return
+    }
+    $script:updMode = $(if ($cmbUpdate.SelectedIndex -eq 0) { 'on' } else { 'off' })
+    Save-Setting $updateFile $script:updMode
+})
+
+# First start: ask once. Later: check quietly if the user agreed.
+$form.Add_Shown({
+    Update-TopLayout; Update-BottomLayout; Update-ListColumns   # finish the layout before any question
+    if (-not $script:updMode) {
+        $script:updMode = $(if (Ask-YesNo ((T 'updAsk') -f "`n") 'updTitle') { 'on' } else { 'off' })
+        Save-Setting $updateFile $script:updMode
+        $script:fillingTheme = $true
+        $cmbUpdate.SelectedIndex = $(if ($script:updMode -eq 'on') { 0 } else { 1 })
+        $script:fillingTheme = $false
+    }
+    if ($script:updMode -eq 'on') { Start-UpdateCheck $false }
+})
+
 $form.Add_Resize({ Update-TopLayout; Update-BottomLayout; Update-ListColumns })
 $form.Add_Shown({ Update-TopLayout; Update-BottomLayout; Update-ListColumns })
 $list.Add_ColumnWidthChanged({ param($s, $e) if ($e.ColumnIndex -lt 3) { Update-ListColumns } })

@@ -1,7 +1,7 @@
 =====================================================================
   ModSweep for The Sims 4 (Mac and Linux edition)
   Clean up your Mods folder: duplicates, old versions, junk and more
-  Version 1.2.0, created by Justinimini
+  Version 1.2.1, created by Justinimini
 =====================================================================
 
 (Deutsche Anleitung weiter unten.)
@@ -37,7 +37,7 @@ accident.
 
 REQUIREMENTS
   * macOS 11 (Big Sur) or newer
-  * Python 3 from python.org (free)
+  * Python 3.8 or newer from python.org (free)
 
 INSTALLATION
   1. Install Python: go to https://www.python.org/downloads/macos/,
@@ -78,7 +78,7 @@ ModSweep finds it automatically.
 =====================================================================
 
 REQUIREMENTS
-  * Python 3 with Tkinter. Most systems have Python already.
+  * Python 3.8 or newer with Tkinter. Most systems have Python already.
     If Tkinter is missing, install it:
       Ubuntu, Debian, Mint:  sudo apt install python3-tk
       Fedora:                sudo dnf install python3-tkinter
@@ -160,6 +160,15 @@ LIGHT AND DARK MODE
   desktop, default), Theme: Light or Theme: Dark.
   ModSweep remembers your choice.
 
+UPDATES
+  On the first start ModSweep asks if it should look for new
+  versions. If you say yes, it asks GitHub for the newest version
+  number each time it starts. No data about you or your mods is
+  sent, and nothing is downloaded or installed on its own. If there
+  is a new version, ModSweep asks you and opens the download page.
+  At the bottom right you can switch this on or off, or choose
+  "Check for updates".
+
 GOOD TO KNOW
   * Close Sims 4 before deleting or moving files.
   * Script mods (.ts4script) may only be 1 folder deep inside Mods.
@@ -200,7 +209,7 @@ ModSweep vor dem Löschen noch einmal.
 
 VORAUSSETZUNGEN
   * macOS 11 (Big Sur) oder neuer
-  * Python 3 von python.org (kostenlos)
+  * Python 3.8 oder neuer von python.org (kostenlos)
 
 INSTALLATION
   1. Python installieren: Auf https://www.python.org/downloads/macos/
@@ -245,7 +254,7 @@ ModSweep findet ihn automatisch.
 =====================================================================
 
 VORAUSSETZUNGEN
-  * Python 3 mit Tkinter. Python ist meistens schon installiert.
+  * Python 3.8 oder neuer mit Tkinter. Python ist meistens schon installiert.
     Falls Tkinter fehlt:
       Ubuntu, Debian, Mint:  sudo apt install python3-tk
       Fedora:                sudo dnf install python3-tkinter
@@ -331,6 +340,15 @@ HELLER UND DUNKLER MODUS
   Unten rechts: Design: System (folgt macOS bzw. deinem
   Linux-Desktop, Standard), Design: Hell oder Design: Dunkel.
   ModSweep merkt sich deine Auswahl.
+
+UPDATES
+  Beim ersten Start fragt ModSweep, ob es nach neuen Versionen
+  suchen soll. Wenn du zustimmst, fragt es bei jedem Start bei
+  GitHub nach der neuesten Versionsnummer. Es werden keine Daten
+  über dich oder deine Mods gesendet, und es wird nichts von selbst
+  heruntergeladen oder installiert. Gibt es eine neue Version, fragt
+  ModSweep dich und öffnet die Download-Seite. Unten rechts kannst du
+  das ein- oder ausschalten oder "Jetzt prüfen" wählen.
 
 GUT ZU WISSEN
   * Schließe Sims 4, bevor du Dateien löschst oder verschiebst.

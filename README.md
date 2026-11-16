@@ -38,6 +38,8 @@ Everything you delete goes to the **Recycle Bin** (Trash on Mac and Linux), so n
 
 **Light and dark mode:** follows your system setting, or choose light or dark yourself
 
+**Update check (optional):** if you agree, ModSweep tells you when a new version is out and opens the download page for you. You can switch it off at the bottom right.
+
 **Remembers your folder:** ModSweep remembers the folder you used last. On the first start it picks the Sims 4 folder that really has mods (e.g. "Die Sims 4" instead of an empty "The Sims 4").
 
 
@@ -46,7 +48,7 @@ Everything you delete goes to the **Recycle Bin** (Trash on Mac and Linux), so n
 Get the latest version on the **[Releases page](https://github.com/justin-wq1337/ModSweep/releases/latest)**:
 
 * **ModSweep-for-The-Sims-4.zip** for **Windows 10 and 11**. Nothing else to install.
-* **ModSweep-for-The-Sims-4-Mac-Linux.zip** for **macOS 11 or newer** and **Linux**. Needs Python 3 (free from python.org on Mac).
+* **ModSweep-for-The-Sims-4-Mac-Linux.zip** for **macOS 11 or newer** and **Linux**. Needs Python 3.8 or newer (free from python.org on Mac).
 
 
 ## Installation (Windows)
@@ -71,17 +73,18 @@ Please follow the README.txt inside the Mac and Linux ZIP. In short:
 ## Safety and transparency
 
 * ModSweep is **open source**. `ModSweep.ps1` (Windows) and `modsweep.py` (Mac and Linux) are plain text, so you can read every line.
-* It does **not** collect or send any data. The only internet access is opening Scarlet's Mod List in your browser when you click that button.
+* It does **not** collect or send any data about you or your mods.
+* Internet access only happens in two cases: when you click "Check update status online" (opens Scarlet's Mod List in your browser), and, if you agree on the first start, a short check on GitHub for the newest ModSweep version number. Nothing is downloaded or installed on its own.
 * Deleted files go to the **Recycle Bin** or Trash. If Windows cannot use the Recycle Bin (for example on a network drive), Windows asks you before anything is deleted for good.
 * Empty folders are checked again right before they are deleted, so nothing that was added in the meantime is lost.
 * For duplicates and versions, ModSweep never lets you delete every file of a group.
 * ModSweep was made with the help of an AI assistant (Claude by Anthropic).
 * Some antivirus programs are suspicious of scripts in general. If yours shows a warning, you can check the code yourself or look at the VirusTotal scans linked below.
 
-VirusTotal scans of version 1.2.0, no security vendor flagged either file:
+VirusTotal scans of version 1.2.1, no security vendor flagged either file:
 
-* Windows ZIP: **0 of 63** ([full report](https://www.virustotal.com/gui/file/d30ea6cafc6d7e7e6a25ffcc06ce80a394033712018770321736dc085700fd58))
-* Mac and Linux ZIP: **0 of 64** ([full report](https://www.virustotal.com/gui/file/1cca5cb77544cabb25808e36b6374aed3f50e1b4cd30a452b9308bf5864faf73))
+* Windows ZIP: **0 of 62** ([full report](https://www.virustotal.com/gui/file/145c395cfac17b773d85d5797000c17cac73cde5d22efcbca1a2b5593e4250e1))
+* Mac and Linux ZIP: **0 of 62** ([full report](https://www.virustotal.com/gui/file/7430d27e082528bf9b4cf95e8445ba7264be4a4c786cae839cae319db285ab93))
 
 
 ## FAQ
@@ -94,6 +97,13 @@ No. There is no common database for Sims 4 mod versions. The "Check update statu
 
 **Does it work on Mac and Linux?**
 Yes, with the Mac and Linux edition. The Mac and Linux edition is new, so please report any problems in the Issues tab.
+
+
+## What's new in 1.2.1
+
+* New: **optional update check.** On the first start ModSweep asks if it should look for new versions. If you agree, it tells you when a new version is on GitHub and opens the download page. Nothing is downloaded or installed on its own, and no data about you is sent. You can switch it on or off at the bottom right, or check by hand.
+* Clearer text in "Several versions": the highest version is listed first
+* Small fixes: wider choice lists at the bottom right, safer CSV export
 
 
 ## What's new in 1.2.0
